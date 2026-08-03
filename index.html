@@ -140,6 +140,11 @@
   .rig-item span.txt { flex: 1; line-height: 1.4; }
   /* 编辑器表格 */
   .ed-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  /* 题库编辑：筛选/搜索 与 新增题目 分区 */
+  .ed-block { padding: 11px 12px; border: 2px solid var(--line); border-radius: 14px; background: #fff; margin-bottom: 12px; }
+  .ed-block-title { font-size: 13px; font-weight: 800; color: var(--pink-deep); margin-bottom: 9px; display: flex; align-items: center; gap: 6px; font-family: "Nunito", sans-serif; }
+  .ed-block.ed-add { background: rgba(255,158,196,.12); border-color: var(--pink); }
+  .ed-block .ed-toolbar:last-child { margin-bottom: 0; }
   .ed-list { max-height: 360px; overflow: auto; border: 2px solid var(--line); border-radius: 16px; background: #fff; }
   table.ed { width: 100%; border-collapse: collapse; font-size: 13px; }
   table.ed th {
@@ -218,31 +223,42 @@
           <span class="hint" id="bankStat"></span>
         </div>
         <div class="hint">导出 JSON 是「无损」备份（含话题表），可直接改完再导入覆盖。CSV 方便用 Excel/表格批量改文字，但话题标签会回退为 id。导入都会<b>整体覆盖</b>当前题库。</div>
-        <div class="ed-toolbar">
-          <select id="edCat"><option value="all">全部分类</option></select>
-          <select id="edTopic"><option value="all">全部话题范围</option></select>
-          <span class="sub" style="padding-left:0">尺度</span>
-          <select id="edLevel" title="大冒险尺度分级（0 社牛solo / 1 礼貌试探 / 2 升温互动 / 3 全场尖叫·需限制级模式）">
-            <option value="all">全部尺度</option>
-            <option value="0">0 · 社牛solo（表情包模仿/霸总台词）</option>
-            <option value="1">1 · 礼貌试探（握手/击掌）</option>
-            <option value="2">2 · 升温互动（拥抱/喂食）</option>
-            <option value="3">3 · 全场尖叫（贴面/耳语）</option>
-          </select>
-          <input type="text" id="edSearch" placeholder="搜索题干…" class="wide" style="flex:1;min-width:140px" />
-          <button class="sm ghost" id="edRefresh">刷新</button>
+        <div class="ed-block">
+          <div class="ed-block-title">🔍 筛选 / 搜索</div>
+          <div class="ed-toolbar">
+            <select id="edCat"><option value="all">全部分类</option></select>
+            <select id="edTopic"><option value="all">全部话题范围</option></select>
+            <span class="sub" style="padding-left:0">尺度</span>
+            <select id="edLevel" title="大冒险尺度分级（0 社牛solo / 1 礼貌试探 / 2 升温互动 / 3 全场尖叫·需限制级模式）">
+              <option value="all">全部尺度</option>
+              <option value="0">0 · 社牛solo（表情包模仿/霸总台词）</option>
+              <option value="1">1 · 礼貌试探（握手/击掌）</option>
+              <option value="2">2 · 升温互动（拥抱/喂食）</option>
+              <option value="3">3 · 全场尖叫（贴面/耳语）</option>
+            </select>
+          </div>
+          <div class="ed-toolbar">
+            <input type="text" id="edSearch" placeholder="搜索题干…" class="wide" style="flex:1;min-width:140px" />
+            <button class="sm ghost" id="edRefresh">刷新</button>
+          </div>
         </div>
-        <div class="ed-toolbar">
-          <input type="text" id="edNewText" placeholder="新题题干…" style="flex:1;min-width:160px" />
-          <select id="edNewCat"></select>
-          <select id="edNewTopic"></select>
-          <select id="edNewLevel" title="大冒险尺度分级">
-            <option value="0">尺度 0 · 社牛solo</option>
-            <option value="1">尺度 1 · 礼貌试探</option>
-            <option value="2">尺度 2 · 升温互动</option>
-            <option value="3">尺度 3 · 全场尖叫</option>
-          </select>
-          <button class="sm" id="edAdd">＋ 新增</button>
+
+        <div class="ed-block ed-add">
+          <div class="ed-block-title">＋ 新增题目</div>
+          <div class="ed-toolbar">
+            <input type="text" id="edNewText" placeholder="新题题干…" class="wide" style="flex:1;min-width:160px" />
+          </div>
+          <div class="ed-toolbar">
+            <select id="edNewCat"></select>
+            <select id="edNewTopic"></select>
+            <select id="edNewLevel" title="大冒险尺度分级">
+              <option value="0">尺度 0 · 社牛solo</option>
+              <option value="1">尺度 1 · 礼貌试探</option>
+              <option value="2">尺度 2 · 升温互动</option>
+              <option value="3">尺度 3 · 全场尖叫</option>
+            </select>
+            <button class="sm" id="edAdd">＋ 新增</button>
+          </div>
         </div>
         <div class="ed-list">
           <table class="ed">
