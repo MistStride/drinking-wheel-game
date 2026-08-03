@@ -20,7 +20,20 @@ if (bankJson.includes('</script')) {
 }
 const bank = 'window.QUESTION_BANK = ' + bankJson + ';\n';
 
-const out = src.replace('/*__QUESTION_BANK__*/', bank);
+// 自定义题库指南：把 md 内联为 window.GUIDE_MD，供「下载题库指南」按钮直接导出
+if (!src.includes('/*__GUIDE_MD__*/')) {
+  console.error('未找到占位符 /*__GUIDE_MD__*/');
+  process.exit(1);
+}
+let guideJson = JSON.stringify(fs.readFileSync(path + '/自定义题库指南.md', 'utf8'));
+// 防止 md 内出现 </script> 截断脚本块
+if (guideJson.includes('</script')) {
+  console.error('指南 md 中含 </script，存在注入风险，已中止');
+  process.exit(1);
+}
+const guide = 'window.GUIDE_MD = ' + guideJson + ';\n';
+
+const out = src.replace('/*__QUESTION_BANK__*/', bank).replace('/*__GUIDE_MD__*/', guide);
 fs.writeFileSync(path + '/app.html', out);
 // GitHub Pages 访问根网址时默认打开 index.html，故同步写一份，保证线上 = 最新 app
 fs.writeFileSync(path + '/index.html', out);
