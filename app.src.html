@@ -330,7 +330,7 @@
       <div class="card">
         <h2>② 内容开关 <span class="tag">勾选要放进转盘的类别</span></h2>
         <div class="row" id="catSwitches"></div>
-        <label class="chk" style="margin-top:8px"><input type="checkbox" id="adultMode" /> 限制级模式（解锁前任 / 迷恋暧昧 / 身体探索 / 亲密接触 等 spicy 内容）</label>
+        <label class="chk" style="margin-top:8px"><input type="checkbox" id="adultMode" /> 限制级模式（解锁前任 / 迷恋暧昧 / 身体探索 等 spicy 话题，并放开大冒险「全场尖叫（3 级）」）</label>
         <div class="hint">开启后自动勾选限制级话题并放开「全场尖叫（3 级）」；关闭则收回。</div>
       </div>
 
@@ -1006,7 +1006,7 @@
     settings.adultMode = e.target.checked;
     // 自动勾选/取消成人话题
     QB.topics.truth.forEach(t => { if (t.adultOnly) settings.truthTopics[t.id] = e.target.checked; });
-    // 自动放开/收回亲密接触等级
+    // 自动放开/收回全场尖叫(3级)接触等级
     const mc = document.getElementById('maxContact');
     if (e.target.checked) { if (settings.maxContact < 3) { settings.maxContact = 3; mc.value = '3'; } }
     else { if (settings.maxContact > 2) { settings.maxContact = 2; mc.value = '2'; } }
