@@ -272,6 +272,12 @@
                 <option value="3">尺度 3 · 全场尖叫</option>
               </select>
             </span>
+            <span id="edNewWhoRow" style="display:none;gap:8px;align-items:center">
+              <select id="edNewWho">
+                <option value="self">自己喝</option>
+                <option value="other">指定其他人喝/接力</option>
+              </select>
+            </span>
             <button class="sm" id="edAdd">＋ 新增</button>
           </div>
           <div class="ed-toolbar" id="edNewCatInput" style="display:none;margin-top:6px">
@@ -547,7 +553,7 @@
     if (q.cat === 'drink') {
       if (q.combo) return '喝+一道题';
       if (q.who && q.who !== 'self') return '指定他人/接力';
-      return { sip: '基础喝', glass: '喝一杯', chug: '罚酒干杯', bottle: '整瓶' }[q.amount] || '直接喝';
+      return { sip: '趣味喝法', 'half-glass': '半杯', glass: '喝一杯', chug: '罚酒干杯', bottle: '整瓶' }[q.amount] || '直接喝';
     }
     return CAT_META[q.cat].label;
   }
@@ -860,62 +866,86 @@
     if (cat === 'truth' || cat === 'deeptalk') return QB.topics[cat] || [];
     return [];
   }
+  // 二级分类/量级选项：大冒险=肢体接触 0~3（尺度）；直接喝=饮酒量级（最温和·趣味喝法 / 喝一杯 / 罚酒干杯最猛）
+  function levelOptionsFor(cat) {
+    if (cat === 'dare') return [
+      { value: '0', label: '尺度 0 · 社牛solo' },
+      { value: '1', label: '尺度 1 · 礼貌试探' },
+      { value: '2', label: '尺度 2 · 升温互动' },
+      { value: '3', label: '尺度 3 · 全场尖叫' },
+    ];
+    if (cat === 'drink') return [
+      { value: 'sip', label: '最温和 · 趣味喝法' },
+      { value: 'glass', label: '喝一杯' },
+      { value: 'chug', label: '罚酒干杯（最猛）' },
+    ];
+    return [];
+  }
   function refreshEdCatSelect() {
     const sel = document.getElementById('edCat'); fillCatSelect(sel, true);
     const nc = document.getElementById('edNewCat'); fillCatSelect(nc, false);
     updateEdNewOptions();
     updateEdRefineFilter();
   }
-  // 新增题目面板的二级分类/尺度联动：truth/deeptalk 显示话题范围，dare 显示尺度，drink 隐藏两者
+  // 新增题目面板的二级分类/尺度联动：truth/deeptalk 显示话题范围(可新增)，dare/直接喝 显示尺度(固定，不可新增)
   function updateEdNewOptions() {
     const cat = document.getElementById('edNewCat').value;
     const topicRow = document.getElementById('edNewTopicRow');
     const levelRow = document.getElementById('edNewLevelRow');
     const topicSel = document.getElementById('edNewTopic'); topicSel.innerHTML = '';
-    const levelSel = document.getElementById('edNewLevel');
+    const levelSel = document.getElementById('edNewLevel'); levelSel.innerHTML = ''; levelSel.disabled = false;
     const ncHint = document.getElementById('edNewCatHint');
     const ncInput = document.getElementById('edNewCatInput');
 
     if (cat === 'truth' || cat === 'deeptalk') {
       topicRow.style.display = '';
       levelRow.style.display = 'none';
-      levelSel.value = '0';
       topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; topicSel.appendChild(o); });
       ncHint.style.display = 'none';
-    } else if (cat === 'dare') {
+    } else if (cat === 'dare' || cat === 'drink') {
       topicRow.style.display = 'none';
       levelRow.style.display = '';
-      levelSel.disabled = false;
+      const whoRow = document.getElementById('edNewWhoRow');
+      if (cat === 'drink') {
+        levelSel.title = '直接喝 · 量级';
+        whoRow.style.display = '';
+      } else {
+        levelSel.title = '大冒险尺度分级';
+        whoRow.style.display = 'none';
+      }
+      levelOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.value; o.textContent = t.label; levelSel.appendChild(o); });
       ncHint.style.display = 'none';
     } else {
       topicRow.style.display = 'none';
       levelRow.style.display = 'none';
-      levelSel.value = '0';
-      ncHint.style.display = '';
-      ncHint.textContent = '直接喝无需设置二级分类或尺度。';
+      ncHint.style.display = 'none';
     }
     if (ncInput.style.display !== 'none' && cat !== 'truth' && cat !== 'deeptalk') {
       ncInput.style.display = 'none';
     }
   }
-  // 编辑器二级筛选下拉：根据所选主分类，动态显示「话题范围」(真心话/Deeptalk) 或「尺度」(大冒险)，其余分类隐藏
+  // 编辑器二级筛选下拉：根据所选主分类，动态显示「话题范围」(真心话/Deeptalk) 或「尺度」(大冒险/直接喝)
   function updateEdRefineFilter() {
     const cat = document.getElementById('edCat').value;
     const label = document.getElementById('edRefineLabel');
     const row = document.getElementById('edRefineRow');
     const sel = document.getElementById('edRefine'); sel.innerHTML = '';
     const isTopic = (cat === 'truth' || cat === 'deeptalk');
-    const isDare = (cat === 'dare');
-    if (!isTopic && !isDare) { row.style.display = 'none'; sel.innerHTML = '<option value="all">全部</option>'; return; }
+    const isLevel = (cat === 'dare' || cat === 'drink');
+    if (!isTopic && !isLevel) { row.style.display = 'none'; sel.innerHTML = '<option value="all">全部</option>'; return; }
     row.style.display = '';
     if (isTopic) {
       label.textContent = '话题范围';
       const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = '全部话题范围'; sel.appendChild(o0);
       topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; sel.appendChild(o); });
     } else {
-      label.textContent = '尺度';
-      const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = '全部尺度'; sel.appendChild(o0);
-      ['0 · 社牛solo（表情包模仿/霸总台词）', '1 · 礼貌试探（握手/击掌）', '2 · 升温互动（拥抱/喂食）', '3 · 全场尖叫（贴面/耳语）'].forEach((t, i) => { const o = document.createElement('option'); o.value = String(i); o.textContent = t; sel.appendChild(o); });
+      label.textContent = (cat === 'drink') ? '量级' : '尺度';
+      const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = (cat === 'drink') ? '全部量级' : '全部尺度'; sel.appendChild(o0);
+      if (cat === 'dare') {
+        ['0 · 社牛solo（表情包模仿/霸总台词）', '1 · 礼貌试探（握手/击掌）', '2 · 升温互动（拥抱/喂食）', '3 · 全场尖叫（贴面/耳语）'].forEach((t, i) => { const o = document.createElement('option'); o.value = String(i); o.textContent = t; sel.appendChild(o); });
+      } else {
+        levelOptionsFor('drink').forEach(t => { const o = document.createElement('option'); o.value = t.value; o.textContent = t.label; sel.appendChild(o); });
+      }
     }
   }
 
@@ -954,6 +984,7 @@
     let list = QB.questions.filter(q => cat === 'all' || q.cat === cat);
     if (refine !== 'all') {
       if (cat === 'dare') list = list.filter(q => String(q.contact) === refine);
+      else if (cat === 'drink') list = list.filter(q => (q.amount || 'sip') === refine);
       else list = list.filter(q => q.topic === refine);
     }
     if (kw) list = list.filter(q => (q.text || '').toLowerCase().includes(kw));
@@ -980,6 +1011,14 @@
         const cs = document.createElement('select'); cs.className = 'risk';
         [0, 1, 2, 3].forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = '尺度' + v; if ((q.contact || 0) === v) o.selected = true; cs.appendChild(o); });
         cs.onchange = () => { q.contact = parseInt(cs.value, 10); rebuild(); };
+        tdScale.appendChild(cs);
+      } else if (q.cat === 'drink') {
+        const cs = document.createElement('select'); cs.className = 'risk';
+        const AMT = { sip: '最温和·趣味喝法', 'half-glass': '半杯', glass: '喝一杯', chug: '罚酒干杯', bottle: '整瓶' };
+        const cur = q.amount || 'sip';
+        if (!['sip', 'glass', 'chug'].includes(cur)) { const o = document.createElement('option'); o.value = cur; o.textContent = AMT[cur] || cur; if (true) o.selected = true; cs.appendChild(o); }
+        ['sip', 'glass', 'chug'].forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = AMT[v]; if (v === cur) o.selected = true; cs.appendChild(o); });
+        cs.onchange = () => { q.amount = cs.value; rebuild(); };
         tdScale.appendChild(cs);
       } else { tdScale.textContent = '—'; tdScale.style.color = 'var(--muted)'; }
       const td4 = document.createElement('td');
@@ -1239,7 +1278,7 @@
     const q = { id: cat + '-user-' + Date.now(), cat, text, risk: 'safe', difficulty: 1, enabled: true };
     if (cat === 'truth' || cat === 'deeptalk') q.topic = document.getElementById('edNewTopic').value || (QB.topics[cat][0] && QB.topics[cat][0].id);
     if (cat === 'dare') { q.contact = parseInt(document.getElementById('edNewLevel').value, 10) || 0; q.stranger = false; q.target = 'self'; q.scene = 'any'; }
-    if (cat === 'drink') { q.amount = 'sip'; q.who = 'self'; }
+    if (cat === 'drink') { q.amount = document.getElementById('edNewLevel').value || 'sip'; q.who = document.getElementById('edNewWho').value || 'self'; }
     QB.questions.push(q);
     document.getElementById('edNewText').value = '';
     renderEditor(); rebuild();
