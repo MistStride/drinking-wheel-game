@@ -341,8 +341,8 @@
       <div class="card">
         <h2>② 内容开关 <span class="tag">勾选要放进转盘的类别</span></h2>
         <div class="row" id="catSwitches"></div>
-        <label class="chk" style="margin-top:8px"><input type="checkbox" id="adultMode" /> 限制级模式（解锁前任 等 spicy 话题，并放开大冒险「全场尖叫（3 级）」）</label>
-        <div class="hint">开启后自动勾选限制级话题并放开「全场尖叫（3 级）」；关闭则收回。</div>
+        <label class="chk" style="margin-top:8px"><input type="checkbox" id="adultMode" /> 高能模式（解锁前任等 spicy 话题，并放开大冒险「全场尖叫（3 级）」）</label>
+        <div class="hint">开启后自动勾选高能话题并放开「全场尖叫（3 级）」；关闭则收回。</div>
       </div>
 
       <!-- 真心话题 -->
@@ -366,7 +366,7 @@
             <option value="3">3 · 全场尖叫（贴面/耳语）</option>
           </select>
         </div>
-        <div class="hint">高于所选等级、或需限制级模式的「大冒险」不会进入转盘。</div>
+        <div class="hint">高于所选等级、或需高能模式的「大冒险」不会进入转盘。</div>
       </div>
 
       <!-- 直接喝设置 -->
@@ -782,7 +782,7 @@
     if (!kw) return;
     let list = QB.questions.filter(q => isActive(q) && (q.text || '').toLowerCase().includes(kw));
     if (list.length > 20) list = list.slice(0, 20);
-    if (list.length === 0) { box.innerHTML = '<div class="hint" style="padding:8px">无匹配（只搜索当前生效题目；可放宽过滤或开启限制级模式）</div>'; return; }
+    if (list.length === 0) { box.innerHTML = '<div class="hint" style="padding:8px">无匹配（只搜索当前生效题目；可放宽过滤或开启高能模式）</div>'; return; }
     list.forEach(q => {
       const div = document.createElement('div');
       div.className = 'rig-item' + (rigSelQid === q.id ? ' sel' : '');
