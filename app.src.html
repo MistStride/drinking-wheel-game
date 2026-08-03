@@ -251,15 +251,6 @@
             <input type="text" id="edSearch" placeholder="搜索题干…" class="wide" style="flex:1;min-width:140px" />
             <button class="sm ghost" id="edRefresh">刷新</button>
           </div>
-          <div class="ed-toolbar" id="edNewCatRow" style="margin-top:6px">
-            <button class="sm ghost" id="btnNewCat">＋ 新增分类</button>
-          </div>
-          <div class="ed-toolbar" id="edNewCatInput" style="display:none;margin-top:6px">
-            <input type="text" id="edNewCatName" placeholder="输入新分类名，如：童年糗事" class="wide" style="flex:1;min-width:140px" />
-            <button class="sm" id="edNewCatConfirm">确认</button>
-            <button class="sm ghost" id="edNewCatCancel">取消</button>
-          </div>
-          <div class="hint" id="edNewCatHint" style="display:none;margin-top:6px"></div>
         </div>
 
         <div class="ed-block ed-add">
@@ -269,15 +260,26 @@
           </div>
           <div class="ed-toolbar">
             <select id="edNewCat"></select>
-            <select id="edNewTopic"></select>
-            <select id="edNewLevel" title="大冒险尺度分级">
-              <option value="0">尺度 0 · 社牛solo</option>
-              <option value="1">尺度 1 · 礼貌试探</option>
-              <option value="2">尺度 2 · 升温互动</option>
-              <option value="3">尺度 3 · 全场尖叫</option>
-            </select>
+            <span id="edNewTopicRow" style="display:inline-flex;gap:8px;align-items:center">
+              <select id="edNewTopic"></select>
+              <button class="sm ghost" id="btnNewCat">＋ 新增分类</button>
+            </span>
+            <span id="edNewLevelRow" style="display:inline-flex;gap:8px;align-items:center">
+              <select id="edNewLevel" title="大冒险尺度分级">
+                <option value="0">尺度 0 · 社牛solo</option>
+                <option value="1">尺度 1 · 礼貌试探</option>
+                <option value="2">尺度 2 · 升温互动</option>
+                <option value="3">尺度 3 · 全场尖叫</option>
+              </select>
+            </span>
             <button class="sm" id="edAdd">＋ 新增</button>
           </div>
+          <div class="ed-toolbar" id="edNewCatInput" style="display:none;margin-top:6px">
+            <input type="text" id="edNewCatName" placeholder="输入新分类名，如：童年糗事" class="wide" style="flex:1;min-width:140px" />
+            <button class="sm" id="edNewCatConfirm">确认</button>
+            <button class="sm ghost" id="edNewCatCancel">取消</button>
+          </div>
+          <div class="hint" id="edNewCatHint" style="display:none;margin-top:6px"></div>
         </div>
         <div class="ed-list">
           <table class="ed">
@@ -859,18 +861,40 @@
   function refreshEdCatSelect() {
     const sel = document.getElementById('edCat'); fillCatSelect(sel, true);
     const nc = document.getElementById('edNewCat'); fillCatSelect(nc, false);
-    updateEdNewTopic();
+    updateEdNewOptions();
     updateEdRefineFilter();
   }
-  function updateEdNewTopic() {
+  // 新增题目面板的二级分类/尺度联动：truth/deeptalk 显示话题范围，dare 显示尺度，drink 隐藏两者
+  function updateEdNewOptions() {
     const cat = document.getElementById('edNewCat').value;
-    const sel = document.getElementById('edNewTopic'); sel.innerHTML = '';
-    const opts = topicOptionsFor(cat);
-    if (opts.length === 0) { const o = document.createElement('option'); o.value = ''; o.textContent = '—'; sel.appendChild(o); }
-    else opts.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; sel.appendChild(o); });
-    const nl = document.getElementById('edNewLevel');
-    if (cat === 'dare') { nl.disabled = false; }
-    else { nl.disabled = true; nl.value = '0'; }
+    const topicRow = document.getElementById('edNewTopicRow');
+    const levelRow = document.getElementById('edNewLevelRow');
+    const topicSel = document.getElementById('edNewTopic'); topicSel.innerHTML = '';
+    const levelSel = document.getElementById('edNewLevel');
+    const ncHint = document.getElementById('edNewCatHint');
+    const ncInput = document.getElementById('edNewCatInput');
+
+    if (cat === 'truth' || cat === 'deeptalk') {
+      topicRow.style.display = '';
+      levelRow.style.display = 'none';
+      levelSel.value = '0';
+      topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; topicSel.appendChild(o); });
+      ncHint.style.display = 'none';
+    } else if (cat === 'dare') {
+      topicRow.style.display = 'none';
+      levelRow.style.display = '';
+      levelSel.disabled = false;
+      ncHint.style.display = 'none';
+    } else {
+      topicRow.style.display = 'none';
+      levelRow.style.display = 'none';
+      levelSel.value = '0';
+      ncHint.style.display = '';
+      ncHint.textContent = '直接喝无需设置二级分类或尺度。';
+    }
+    if (ncInput.style.display !== 'none' && cat !== 'truth' && cat !== 'deeptalk') {
+      ncInput.style.display = 'none';
+    }
   }
   // 编辑器二级筛选下拉：根据所选主分类，动态显示「话题范围」(真心话/Deeptalk) 或「尺度」(大冒险)，其余分类隐藏
   function updateEdRefineFilter() {
@@ -891,25 +915,11 @@
       const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = '全部尺度'; sel.appendChild(o0);
       ['0 · 社牛solo（表情包模仿/霸总台词）', '1 · 礼貌试探（握手/击掌）', '2 · 升温互动（拥抱/喂食）', '3 · 全场尖叫（贴面/耳语）'].forEach((t, i) => { const o = document.createElement('option'); o.value = String(i); o.textContent = t; sel.appendChild(o); });
     }
-    // 「新增分类」仅对带话题范围的分类开放
-    const ncRow = document.getElementById('edNewCatRow');
-    const ncHint = document.getElementById('edNewCatHint');
-    const ncInput = document.getElementById('edNewCatInput');
-    if (isTopic) {
-      ncRow.style.display = '';
-      ncHint.style.display = 'none';
-      if (ncInput.style.display !== 'none') updateEdNewTopic();
-    } else {
-      ncRow.style.display = 'none';
-      ncInput.style.display = 'none';
-      ncHint.style.display = '';
-      ncHint.textContent = '「自定义分类」仅用于真心话 / 深度聊的话题范围；大冒险用固定尺度、直接喝无需细分，故不提供。';
-    }
   }
 
   // 新增二级分类（话题范围），仅 truth / deeptalk 可用
   function addNewTopic() {
-    const cat = document.getElementById('edCat').value;
+    const cat = document.getElementById('edNewCat').value;
     if (cat !== 'truth' && cat !== 'deeptalk') return;
     const name = document.getElementById('edNewCatName').value.trim();
     if (!name) { alert('请输入分类名'); return; }
@@ -922,13 +932,16 @@
       id = cat + '-u-' + Date.now();
       QB.topics[cat].push({ id, label: name });
     }
-    updateEdRefineFilter();
-    updateEdNewTopic();
-    document.getElementById('edRefine').value = id;
+    updateEdNewOptions();
+    const edCat = document.getElementById('edCat').value;
+    if (edCat === cat) {
+      updateEdRefineFilter();
+      document.getElementById('edRefine').value = id;
+      renderEditor();
+    }
     document.getElementById('edNewTopic').value = id;
     document.getElementById('edNewCatName').value = '';
     document.getElementById('edNewCatInput').style.display = 'none';
-    renderEditor();
   }
 
   function renderEditor() {
@@ -1204,21 +1217,19 @@
   document.getElementById('fileInputCsv').addEventListener('change', e => { if (e.target.files[0]) doImportCsv(e.target.files[0]); e.target.value = ''; });
   document.getElementById('edRefresh').addEventListener('click', renderEditor);
   document.getElementById('edSearch').addEventListener('input', renderEditor);
-  document.getElementById('edCat').addEventListener('change', () => { updateEdRefineFilter(); document.getElementById('edNewCatInput').style.display = 'none'; renderEditor(); });
+  document.getElementById('edCat').addEventListener('change', () => { updateEdRefineFilter(); renderEditor(); });
   document.getElementById('edRefine').addEventListener('change', renderEditor);
   document.getElementById('btnNewCat').addEventListener('click', () => {
     document.getElementById('edNewCatInput').style.display = '';
-    document.getElementById('edNewCatRow').style.display = 'none';
     document.getElementById('edNewCatName').focus();
   });
   document.getElementById('edNewCatConfirm').addEventListener('click', addNewTopic);
   document.getElementById('edNewCatCancel').addEventListener('click', () => {
     document.getElementById('edNewCatName').value = '';
     document.getElementById('edNewCatInput').style.display = 'none';
-    document.getElementById('edNewCatRow').style.display = '';
   });
   document.getElementById('edNewCatName').addEventListener('keydown', e => { if (e.key === 'Enter') addNewTopic(); });
-  document.getElementById('edNewCat').addEventListener('change', updateEdNewTopic);
+  document.getElementById('edNewCat').addEventListener('change', updateEdNewOptions);
   document.getElementById('edAdd').addEventListener('click', () => {
     const text = document.getElementById('edNewText').value.trim();
     const cat = document.getElementById('edNewCat').value;
