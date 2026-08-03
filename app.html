@@ -44,7 +44,7 @@
     to { transform: translate(-2%, -2%) scale(1.06); }
   }
   header, .layout, footer { position: relative; z-index: 1; }
-  header { padding: 30px 32px 8px; text-align: center; }
+  header { padding: 30px 64px 8px 32px; text-align: center; }
   header h1 {
     margin: 0; font-size: 32px; font-weight: 400; letter-spacing: 1px;
     font-family: "ZCOOL KuaiLe", "Nunito", sans-serif;
@@ -154,92 +154,57 @@
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-thumb { background: var(--pink); border-radius: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
+  /* 右上角设置按钮 + 抽屉 */
+  .gear-btn {
+    position: fixed; top: 16px; right: 16px; z-index: 50;
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; line-height: 1; padding: 0;
+    background: linear-gradient(135deg, var(--yellow), var(--yellow-deep));
+    border: 2px solid #fff; box-shadow: 0 8px 20px rgba(255,158,196,.45);
+    cursor: pointer; transition: transform .3s var(--bounce), box-shadow .2s ease;
+  }
+  .gear-btn:hover { transform: rotate(40deg) scale(1.08); box-shadow: 0 12px 26px rgba(255,158,196,.6); }
+  .gear-btn:active { transform: scale(.9); }
+  .settings-backdrop {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(90,58,71,.30); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+    opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility .25s ease;
+  }
+  .settings-backdrop.open { opacity: 1; visibility: visible; }
+  .settings-drawer {
+    position: fixed; top: 0; right: 0; z-index: 70;
+    width: min(440px, 94vw); height: 100vh; height: 100dvh;
+    background: var(--tint);
+    border-left: 2px solid var(--line);
+    box-shadow: -18px 0 44px rgba(255,142,177,.30);
+    transform: translateX(102%); transition: transform .34s var(--bounce);
+    display: flex; flex-direction: column;
+  }
+  .settings-drawer.open { transform: translateX(0); }
+  .drawer-head {
+    flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px; border-bottom: 2px dashed var(--line);
+    font-family: "ZCOOL KuaiLe", "Nunito", sans-serif; font-size: 18px; color: var(--text-strong);
+  }
+  .drawer-close {
+    background: #fff; border: 2px solid var(--pink); color: var(--pink-deep);
+    width: 34px; height: 34px; border-radius: 50%; font-size: 15px; padding: 0;
+    display: flex; align-items: center; justify-content: center; box-shadow: none;
+  }
+  .drawer-close:hover { background: var(--tint); transform: rotate(90deg) scale(1.06); }
+  .drawer-body { flex: 1 1 auto; overflow-y: auto; padding: 16px 14px 28px; }
 </style>
 </head>
 <body>
-  <header>
-    <h1>🍻 喝酒大转盘</h1>
-    <p id="subtitle">转盘一转，今晚的玩法交给运气——真心话、大冒险、直接喝，还是 Deeptalk？</p>
-  </header>
-
-  <div class="layout">
-    <!-- 左：转盘 + 结果 -->
-    <div class="stage">
-      <div id="wheel"></div>
-      <div class="round-info">
-        <span>当前轮次：<b id="roundNum">0</b></span>
-        <button class="ghost sm" id="resetRound">重置轮次</button>
-      </div>
-      <div class="result placeholder" id="result">点击转盘中央「开始」试试手气 🎯</div>
+  <button id="settingsBtn" class="gear-btn" aria-label="设置" title="设置">⚙️</button>
+  <div id="settingsBackdrop" class="settings-backdrop"></div>
+  <aside id="settingsDrawer" class="settings-drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <span>⚙️ 设置</span>
+      <button id="settingsClose" class="drawer-close" aria-label="关闭">✕</button>
     </div>
-
-    <!-- 右：控制面板 -->
-    <div class="panel">
-      <!-- 转盘抽取 -->
-      <div class="card">
-        <h2>① 转盘抽取 <span class="tag">选择抽题方式</span></h2>
-        <div class="row" style="margin-top:8px">
-          <span>抽取模式：</span>
-          <label class="chk"><input type="radio" name="wheelMode" value="branch" checked /> 按类型（分支）</label>
-          <label class="chk"><input type="radio" name="wheelMode" value="question" /> 按题目</label>
-          <span class="sub" style="padding-left:0">抽 <input type="number" id="qSampleN" min="1" max="1000" value="50" style="width:60px" /> 道（仅「按题目」生效，按类别比例随机抽）</span>
-        </div>
-        <div class="row" style="margin-top:6px">
-          <label class="chk"><input type="checkbox" id="allowRepeat" /> 允许重复抽取（不勾则抽中后该题移出转盘，不会再次抽中）</label>
-          <button class="sm ghost" id="resetDrawn">↺ 重置已抽</button>
-        </div>
-        <div class="hint" id="wheelModeHint">「按类型」：每格代表一个类别，停下后在该类内随机抽一题；「按题目」：按类别比例从生效题随机抽若干道放进转盘，停下直接显示该题原文。</div>
-      </div>
-
-      <!-- 分类开关 -->
-      <div class="card">
-        <h2>② 内容开关 <span class="tag">勾选要放进转盘的类别</span></h2>
-        <div class="row" id="catSwitches"></div>
-        <label class="chk" style="margin-top:8px"><input type="checkbox" id="adultMode" /> 限制级模式（解锁前任 / 迷恋暧昧 / 身体探索 / 亲密接触 等 spicy 内容）</label>
-        <div class="hint">开启后自动勾选限制级话题并放开「亲密接触（3 级）」；关闭则收回。</div>
-      </div>
-
-      <!-- 真心话题 -->
-      <div class="card">
-        <h2>③ 真心话 · 话题范围</h2>
-        <div id="truthTopics" class="sub"></div>
-      </div>
-
-      <!-- 大冒险设置 -->
-      <div class="card">
-        <h2>④ 大冒险 · 尺度</h2>
-        <div class="row">
-          <label class="chk"><input type="checkbox" id="allowStranger" checked /> 允许「骚扰陌生人」类</label>
-        </div>
-        <div class="row">
-          <span>最大肢体接触程度：</span>
-          <select id="maxContact">
-            <option value="0">0 · 无接触</option>
-            <option value="1">1 · 友好（拥抱/牵手）</option>
-            <option value="2" selected>2 · 暧昧（坐腿/喂食）</option>
-            <option value="3">3 · 限制级（需限制级模式）</option>
-          </select>
-        </div>
-        <div class="hint">高于所选等级、或需限制级模式的「大冒险」不会进入转盘。</div>
-      </div>
-
-      <!-- 直接喝设置 -->
-      <div class="card">
-        <h2>⑤ 直接喝 · 量级</h2>
-        <div class="row">
-          <label class="chk"><input type="checkbox" id="allowOthers" /> 允许「指定他人喝 / 接力」类</label>
-        </div>
-        <div class="row">
-          <span>最大饮酒量：</span>
-          <select id="maxAmount">
-            <option value="sip">最温和 · 基础喝 / 趣味喝法</option>
-            <option value="glass">喝一杯</option>
-            <option value="chug">罚酒干杯（最猛）</option>
-          </select>
-        </div>
-        <div class="hint">高于所选量级的「直接喝」不会进入转盘。</div>
-      </div>
-
+    <div class="drawer-body">
       <!-- 暗箱操作 -->
       <div class="card">
         <h2>⑥ 暗箱操作 <span class="tag">指定某次必中</span></h2>
@@ -324,6 +289,92 @@
         </div>
         <div class="hint">编辑后转盘自动按设置重建；「用」取消勾选即把该题移出转盘。导入会整体替换当前题库。</div>
       </div>
+    </div>
+  </aside>
+
+  <header>
+    <h1>🍻 喝酒大转盘</h1>
+    <p id="subtitle">转盘一转，今晚的玩法交给运气——真心话、大冒险、直接喝，还是 Deeptalk？</p>
+  </header>
+
+  <div class="layout">
+    <!-- 左：转盘 + 结果 -->
+    <div class="stage">
+      <div id="wheel"></div>
+      <div class="round-info">
+        <span>当前轮次：<b id="roundNum">0</b></span>
+        <button class="ghost sm" id="resetRound">重置轮次</button>
+      </div>
+      <div class="result placeholder" id="result">点击转盘中央「开始」试试手气 🎯</div>
+    </div>
+
+    <!-- 右：控制面板 -->
+    <div class="panel">
+      <!-- 转盘抽取 -->
+      <div class="card">
+        <h2>① 转盘抽取 <span class="tag">选择抽题方式</span></h2>
+        <div class="row" style="margin-top:8px">
+          <span>抽取模式：</span>
+          <label class="chk"><input type="radio" name="wheelMode" value="branch" checked /> 按类型（分支）</label>
+          <label class="chk"><input type="radio" name="wheelMode" value="question" /> 按题目</label>
+          <span class="sub" style="padding-left:0">抽 <input type="number" id="qSampleN" min="1" max="1000" value="50" style="width:60px" /> 道（仅「按题目」生效，按类别比例随机抽）</span>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <label class="chk"><input type="checkbox" id="allowRepeat" /> 允许重复抽取（不勾则抽中后该题移出转盘，不会再次抽中）</label>
+          <button class="sm ghost" id="resetDrawn">↺ 重置已抽</button>
+        </div>
+        <div class="hint" id="wheelModeHint">「按类型」：每格代表一个类别，停下后在该类内随机抽一题；「按题目」：按类别比例从生效题随机抽若干道放进转盘，停下直接显示该题原文。</div>
+      </div>
+
+      <!-- 分类开关 -->
+      <div class="card">
+        <h2>② 内容开关 <span class="tag">勾选要放进转盘的类别</span></h2>
+        <div class="row" id="catSwitches"></div>
+        <label class="chk" style="margin-top:8px"><input type="checkbox" id="adultMode" /> 限制级模式（解锁前任 / 迷恋暧昧 / 身体探索 / 亲密接触 等 spicy 内容）</label>
+        <div class="hint">开启后自动勾选限制级话题并放开「亲密接触（3 级）」；关闭则收回。</div>
+      </div>
+
+      <!-- 真心话题 -->
+      <div class="card">
+        <h2>③ 真心话 · 话题范围</h2>
+        <div id="truthTopics" class="sub"></div>
+      </div>
+
+      <!-- 大冒险设置 -->
+      <div class="card">
+        <h2>④ 大冒险 · 尺度</h2>
+        <div class="row">
+          <label class="chk"><input type="checkbox" id="allowStranger" checked /> 允许「骚扰陌生人」类</label>
+        </div>
+        <div class="row">
+          <span>最大肢体接触程度：</span>
+          <select id="maxContact">
+            <option value="0">0 · 无接触</option>
+            <option value="1">1 · 友好（拥抱/牵手）</option>
+            <option value="2" selected>2 · 暧昧（坐腿/喂食）</option>
+            <option value="3">3 · 限制级（需限制级模式）</option>
+          </select>
+        </div>
+        <div class="hint">高于所选等级、或需限制级模式的「大冒险」不会进入转盘。</div>
+      </div>
+
+      <!-- 直接喝设置 -->
+      <div class="card">
+        <h2>⑤ 直接喝 · 量级</h2>
+        <div class="row">
+          <label class="chk"><input type="checkbox" id="allowOthers" /> 允许「指定他人喝 / 接力」类</label>
+        </div>
+        <div class="row">
+          <span>最大饮酒量：</span>
+          <select id="maxAmount">
+            <option value="sip">最温和 · 基础喝 / 趣味喝法</option>
+            <option value="glass">喝一杯</option>
+            <option value="chug">罚酒干杯（最猛）</option>
+          </select>
+        </div>
+        <div class="hint">高于所选量级的「直接喝」不会进入转盘。</div>
+      </div>
+
     </div>
   </div>
 
@@ -971,6 +1022,16 @@
   document.getElementById('maxAmount').value = settings.maxAmount;
   document.getElementById('allowStranger').checked = settings.allowStranger;
   document.getElementById('maxContact').value = String(settings.maxContact);
+
+  // ===================== 设置抽屉 =====================
+  const settingsDrawer = document.getElementById('settingsDrawer');
+  const settingsBackdrop = document.getElementById('settingsBackdrop');
+  const openSettings = () => { settingsDrawer.classList.add('open'); settingsBackdrop.classList.add('open'); settingsDrawer.setAttribute('aria-hidden', 'false'); };
+  const closeSettings = () => { settingsDrawer.classList.remove('open'); settingsBackdrop.classList.remove('open'); settingsDrawer.setAttribute('aria-hidden', 'true'); };
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+  document.getElementById('settingsClose').addEventListener('click', closeSettings);
+  settingsBackdrop.addEventListener('click', closeSettings);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettings(); });
 
   document.getElementById('addExact').addEventListener('click', () => {
     const n = parseInt(document.getElementById('exactN').value, 10);
