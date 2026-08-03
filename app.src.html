@@ -223,9 +223,26 @@
         <div class="hint">高于所选等级、或需限制级模式的「大冒险」不会进入转盘。</div>
       </div>
 
+      <!-- 直接喝设置 -->
+      <div class="card">
+        <h2>⑤ 直接喝 · 量级</h2>
+        <div class="row">
+          <label class="chk"><input type="checkbox" id="allowOthers" /> 允许「指定他人喝 / 接力」类</label>
+        </div>
+        <div class="row">
+          <span>最大饮酒量：</span>
+          <select id="maxAmount">
+            <option value="sip">最温和 · 基础喝 / 趣味喝法</option>
+            <option value="glass">喝一杯</option>
+            <option value="chug">罚酒干杯（最猛）</option>
+          </select>
+        </div>
+        <div class="hint">高于所选量级的「直接喝」不会进入转盘。</div>
+      </div>
+
       <!-- 暗箱操作 -->
       <div class="card">
-        <h2>⑤ 暗箱操作 <span class="tag">指定某次必中</span></h2>
+        <h2>⑥ 暗箱操作 <span class="tag">指定某次必中</span></h2>
         <div class="row">
           <span>第</span><input type="number" id="exactN" min="1" value="3" /><span>次必中类别</span>
           <select id="exactCat"></select><button id="addExact">添加</button>
@@ -262,7 +279,7 @@
 
       <!-- 题库编辑器 -->
       <div class="card">
-        <h2>⑥ 题库编辑 / 导入导出 <span class="tag">后台可视化</span></h2>
+        <h2>⑦ 题库编辑 / 导入导出 <span class="tag">后台可视化</span></h2>
         <div class="ed-toolbar">
           <button class="sm" id="btnExport">⬇ 导出 JSON</button>
           <button class="sm ghost" id="btnImport">⬆ 导入 JSON</button>
@@ -276,6 +293,14 @@
         <div class="ed-toolbar">
           <select id="edCat"><option value="all">全部分类</option></select>
           <select id="edTopic"><option value="all">全部话题范围</option></select>
+          <span class="sub" style="padding-left:0">尺度</span>
+          <select id="edLevel" title="大冒险尺度分级（0 无接触 / 1 轻度 / 2 重度 / 3 亲密·需限制级模式）">
+            <option value="all">全部尺度</option>
+            <option value="0">0 · 无接触</option>
+            <option value="1">1 · 轻度（拥抱/牵手）</option>
+            <option value="2">2 · 重度（坐腿/喂食）</option>
+            <option value="3">3 · 亲密（需限制级）</option>
+          </select>
           <input type="text" id="edSearch" placeholder="搜索题干…" class="wide" style="flex:1;min-width:140px" />
           <button class="sm ghost" id="edRefresh">刷新</button>
         </div>
@@ -283,11 +308,17 @@
           <input type="text" id="edNewText" placeholder="新题题干…" style="flex:1;min-width:160px" />
           <select id="edNewCat"></select>
           <select id="edNewTopic"></select>
+          <select id="edNewLevel" title="大冒险尺度分级">
+            <option value="0">尺度 0 · 无接触</option>
+            <option value="1">尺度 1 · 轻度</option>
+            <option value="2">尺度 2 · 重度</option>
+            <option value="3">尺度 3 · 亲密</option>
+          </select>
           <button class="sm" id="edAdd">＋ 新增</button>
         </div>
         <div class="ed-list">
           <table class="ed">
-            <thead><tr><th style="width:34px">用</th><th>题干</th><th style="width:92px">risk</th><th style="width:54px"></th></tr></thead>
+            <thead><tr><th style="width:34px">用</th><th>题干</th><th style="width:92px">risk</th><th style="width:84px">尺度</th><th style="width:54px"></th></tr></thead>
             <tbody id="edBody"></tbody>
           </table>
         </div>
@@ -296,7 +327,7 @@
     </div>
   </div>
 
-  <footer>题库由 gen-bank.js 批量生成，去重/相似度在生成阶段完成；二次开发：题库在 window.QUESTION_BANK，暗箱逻辑 resolveRigging()。</footer>
+  <footer>🍻 转盘一转，今晚的玩法交给运气——玩得开心，量力而行！</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/lucky-canvas@1.7.25"></script>
   <script>
@@ -334,6 +365,7 @@
     enabled: { truth: true, dare: true, drink: true, deeptalk: true },
     truthTopics: {}, deeptalkTopics: {},
     allowStranger: false, maxContact: 1, adultMode: false,
+    allowOthers: false, maxAmount: 'glass',
   };
   ['truth', 'deeptalk'].forEach(cat => {
     QB.topics[cat].forEach(t => { settings[cat + 'Topics'][t.id] = t.defaultOn !== false; });
@@ -356,6 +388,8 @@
   function ruleId() { return ++ruleSeq; }
 
   // ===================== 过滤 + 分支 =====================
+  // 饮酒量级强度：越往后越猛
+  const AMOUNT_LEVEL = { sip: 0, 'half-glass': 0.5, glass: 1, chug: 2, bottle: 3 };
   function isActive(q) {
     if (!settings.enabled[q.cat]) return false;
     if (q.enabled === false) return false;
@@ -367,6 +401,10 @@
     if (q.cat === 'dare') {
       if (q.contact > settings.maxContact) return false;
       if (q.stranger && !settings.allowStranger) return false;
+    }
+    if (q.cat === 'drink') {
+      if (q.amount && AMOUNT_LEVEL[q.amount] > AMOUNT_LEVEL[settings.maxAmount]) return false;
+      if (q.who && q.who !== 'self' && !settings.allowOthers) return false;
     }
     return true;
   }
@@ -671,15 +709,7 @@
   function rebuild() { buildBranches(); buildQuestionSegs(); renderWheel(); updateBankStat(); }
 
   function updateBankStat() {
-    const active = QB.questions.filter(isActive).length;
-    const st = QB.stats || {};
-    let extra = '';
-    if (st.nearRemoved || st.exactRemoved) {
-      extra = ' · 去重移除 ' + (st.nearRemoved || 0) + ' 近重/' + (st.exactRemoved || 0) + ' 重';
-    }
-    const segCount = wheelMode === 'question' ? qSegs.length : branches.length;
-    const segLabel = wheelMode === 'question' ? '题目扇区' : '分支';
-    document.getElementById('bankStat').textContent = '题库 ' + QB.questions.length + ' 题 · 生效 ' + active + ' · ' + segLabel + ' ' + segCount + extra;
+    document.getElementById('bankStat').textContent = '题库 ' + QB.questions.length + ' 题';
   }
 
   // ===================== 暗箱·精准题目搜索 =====================
@@ -716,6 +746,9 @@
     const opts = topicOptionsFor(cat);
     if (opts.length === 0) { const o = document.createElement('option'); o.value = ''; o.textContent = '—'; sel.appendChild(o); }
     else opts.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; sel.appendChild(o); });
+    const nl = document.getElementById('edNewLevel');
+    if (cat === 'dare') { nl.disabled = false; }
+    else { nl.disabled = true; nl.value = '0'; }
   }
   // 编辑器二级话题筛选下拉：根据所选主分类填充（仅 truth/deeptalk 有话题范围）
   function updateEdTopicFilter() {
@@ -723,6 +756,9 @@
     const sel = document.getElementById('edTopic'); sel.innerHTML = '';
     const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = '全部话题范围'; sel.appendChild(o0);
     topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; sel.appendChild(o); });
+    const lvlSel = document.getElementById('edLevel');
+    if (cat === 'dare' || cat === 'all') { lvlSel.disabled = false; }
+    else { lvlSel.disabled = true; lvlSel.value = 'all'; }
   }
 
   function renderEditor() {
@@ -732,6 +768,8 @@
     const body = document.getElementById('edBody'); body.innerHTML = '';
     let list = QB.questions.filter(q => cat === 'all' || q.cat === cat);
     if (topic !== 'all') list = list.filter(q => q.topic === topic);
+    const lvl = document.getElementById('edLevel').value;
+    if (lvl !== 'all') list = list.filter(q => String(q.contact) === lvl);
     if (kw) list = list.filter(q => (q.text || '').toLowerCase().includes(kw));
     if (list.length > 400) {
       const note = document.createElement('tr'); note.innerHTML = '<td colspan="4" class="hint" style="padding:8px">匹配 ' + list.length + ' 题，仅显示前 400；用搜索缩小范围。</td>';
@@ -751,6 +789,13 @@
       ['safe', 'mild', 'spicy'].forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; if ((q.risk || 'safe') === r) o.selected = true; rs.appendChild(o); });
       rs.onchange = () => { q.risk = rs.value; if (q.risk === 'spicy') q.adultOnly = true; rebuild(); };
       td3.appendChild(rs);
+      const tdScale = document.createElement('td');
+      if (q.cat === 'dare') {
+        const cs = document.createElement('select'); cs.className = 'risk';
+        [0, 1, 2, 3].forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = '尺度' + v; if ((q.contact || 0) === v) o.selected = true; cs.appendChild(o); });
+        cs.onchange = () => { q.contact = parseInt(cs.value, 10); rebuild(); };
+        tdScale.appendChild(cs);
+      } else { tdScale.textContent = '—'; tdScale.style.color = 'var(--muted)'; }
       const td4 = document.createElement('td');
       const del = document.createElement('button'); del.className = 'ghost sm'; del.textContent = '删';
       del.onclick = () => {
@@ -758,7 +803,7 @@
         renderEditor(); rebuild();
       };
       td4.appendChild(del);
-      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(td4);
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(tdScale); tr.appendChild(td4);
       body.appendChild(tr);
     });
   }
@@ -920,6 +965,9 @@
   document.getElementById('resetRound').addEventListener('click', () => { spinCount = 0; rigging.usedExact.clear(); document.getElementById('roundNum').textContent = '0'; });
   document.getElementById('allowRepeat').addEventListener('change', e => { allowRepeat = e.target.checked; rebuild(); });
   document.getElementById('resetDrawn').addEventListener('click', () => { drawnIds.clear(); rebuild(); });
+  document.getElementById('allowOthers').addEventListener('change', e => { settings.allowOthers = e.target.checked; rebuild(); });
+  document.getElementById('maxAmount').addEventListener('change', e => { settings.maxAmount = e.target.value; rebuild(); });
+  document.getElementById('maxAmount').value = settings.maxAmount;
 
   document.getElementById('addExact').addEventListener('click', () => {
     const n = parseInt(document.getElementById('exactN').value, 10);
@@ -958,6 +1006,7 @@
   document.getElementById('edSearch').addEventListener('input', renderEditor);
   document.getElementById('edCat').addEventListener('change', () => { updateEdTopicFilter(); renderEditor(); });
   document.getElementById('edTopic').addEventListener('change', renderEditor);
+  document.getElementById('edLevel').addEventListener('change', renderEditor);
   document.getElementById('edNewCat').addEventListener('change', updateEdNewTopic);
   document.getElementById('edAdd').addEventListener('click', () => {
     const text = document.getElementById('edNewText').value.trim();
@@ -965,7 +1014,7 @@
     if (!text) { alert('请输入题干'); return; }
     const q = { id: cat + '-user-' + Date.now(), cat, text, risk: 'safe', difficulty: 1, enabled: true };
     if (cat === 'truth' || cat === 'deeptalk') q.topic = document.getElementById('edNewTopic').value || (QB.topics[cat][0] && QB.topics[cat][0].id);
-    if (cat === 'dare') { q.contact = 0; q.stranger = false; q.target = 'self'; q.scene = 'any'; }
+    if (cat === 'dare') { q.contact = parseInt(document.getElementById('edNewLevel').value, 10) || 0; q.stranger = false; q.target = 'self'; q.scene = 'any'; }
     if (cat === 'drink') { q.amount = 'sip'; q.who = 'self'; }
     QB.questions.push(q);
     document.getElementById('edNewText').value = '';
