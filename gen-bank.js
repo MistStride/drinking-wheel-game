@@ -1,4 +1,4 @@
-// 喝酒大转盘 · 题库生成器 v2
+// 来一口大转盘 · 题库生成器 v2
 // 用法: node gen-bank.js  -> 生成 question-bank.js (window.QUESTION_BANK) 与 question-bank.json
 // 设计来源: question-bank-design.md
 // v2 变更:
