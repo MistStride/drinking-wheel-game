@@ -205,46 +205,9 @@
       <button id="settingsClose" class="drawer-close" aria-label="关闭">✕</button>
     </div>
     <div class="drawer-body">
-      <!-- 暗箱操作 -->
-      <div class="card">
-        <h2>⑥ 暗箱操作 <span class="tag">指定某次必中</span></h2>
-        <div class="row">
-          <span>第</span><input type="number" id="exactN" min="1" value="3" /><span>次必中类别</span>
-          <select id="exactCat"></select><button id="addExact">添加</button>
-        </div>
-        <div class="row">
-          <span>前</span><input type="number" id="prefixK" min="1" value="2" /><span>次必中类别</span>
-          <select id="prefixCat"></select><button id="addPrefix">添加</button>
-        </div>
-        <hr class="sep" />
-        <div class="sub" style="padding-left:0">
-          <b>必中指定题目</b>（先搜索确认某题，再指定轮次）
-          <div class="row" style="margin-top:6px">
-            <input type="text" id="rigSearch" placeholder="搜索题干…（仅限当前生效题目）" class="wide" style="flex:1;min-width:160px" />
-          </div>
-          <div id="rigResults" class="rig-results"></div>
-          <div class="row" style="margin-top:6px">
-            <span>第</span><input type="number" id="qExactN" min="1" value="1" /><span>次必中此题</span>
-            <button id="addQExact">添加</button>
-          </div>
-          <div class="row">
-            <span>前</span><input type="number" id="qPrefixK" min="1" value="2" /><span>次必中此题</span>
-            <button id="addQPrefix">添加</button>
-          </div>
-          <div class="hint">搜索结果只来自「当前会进转盘」的题目；点选一条后再添加规则。</div>
-        </div>
-        <div class="rules" id="ruleList"></div>
-        <div class="hint">「第 N 次」只生效一次；「前 K 次」在其范围内每次都生效。轮次归零后规则可再次触发。</div>
-        <div class="hint">精准暗箱指定的题会强制入选转盘，确保能按设定命中。</div>
-      </div>
-
-      <button class="ghost" id="rebuild" style="width:100%">↻ 立即按当前设置重建转盘</button>
-
-      <hr class="sep" />
-
       <!-- 题库编辑器 -->
       <div class="card">
-        <h2>⑦ 题库编辑 / 导入导出 <span class="tag">后台可视化</span></h2>
+        <h2>⑥ 题库编辑 / 导入导出 <span class="tag">后台可视化</span></h2>
         <div class="ed-toolbar">
           <button class="sm" id="btnExport">⬇ 导出 JSON</button>
           <button class="sm ghost" id="btnImport">⬆ 导入 JSON</button>
@@ -289,6 +252,43 @@
         </div>
         <div class="hint">编辑后转盘自动按设置重建；「用」取消勾选即把该题移出转盘。导入会整体替换当前题库。</div>
       </div>
+
+      <hr class="sep" />
+
+      <!-- 暗箱操作 -->
+      <div class="card">
+        <h2>⑦ 暗箱操作 <span class="tag">指定某次必中</span></h2>
+        <div class="row">
+          <span>第</span><input type="number" id="exactN" min="1" value="3" /><span>次必中类别</span>
+          <select id="exactCat"></select><button id="addExact">添加</button>
+        </div>
+        <div class="row">
+          <span>前</span><input type="number" id="prefixK" min="1" value="2" /><span>次必中类别</span>
+          <select id="prefixCat"></select><button id="addPrefix">添加</button>
+        </div>
+        <hr class="sep" />
+        <div class="sub" style="padding-left:0">
+          <b>必中指定题目</b>（先搜索确认某题，再指定轮次）
+          <div class="row" style="margin-top:6px">
+            <input type="text" id="rigSearch" placeholder="搜索题干…（仅限当前生效题目）" class="wide" style="flex:1;min-width:160px" />
+          </div>
+          <div id="rigResults" class="rig-results"></div>
+          <div class="row" style="margin-top:6px">
+            <span>第</span><input type="number" id="qExactN" min="1" value="1" /><span>次必中此题</span>
+            <button id="addQExact">添加</button>
+          </div>
+          <div class="row">
+            <span>前</span><input type="number" id="qPrefixK" min="1" value="2" /><span>次必中此题</span>
+            <button id="addQPrefix">添加</button>
+          </div>
+          <div class="hint">搜索结果只来自「当前会进转盘」的题目；点选一条后再添加规则。</div>
+        </div>
+        <div class="rules" id="ruleList"></div>
+        <div class="hint">「第 N 次」只生效一次；「前 K 次」在其范围内每次都生效。轮次归零后规则可再次触发。</div>
+        <div class="hint">精准暗箱指定的题会强制入选转盘，确保能按设定命中。</div>
+      </div>
+
+      <button class="ghost" id="rebuild" style="width:100%">↻ 立即按当前设置重建转盘</button>
     </div>
   </aside>
 
