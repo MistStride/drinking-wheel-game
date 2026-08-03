@@ -199,6 +199,19 @@
   }
   .drawer-close:hover { background: var(--tint); transform: rotate(90deg) scale(1.06); }
   .drawer-body { flex: 1 1 auto; overflow-y: auto; padding: 16px 14px 28px; }
+  /* 自定义题库指南弹窗 */
+  .guide-overlay { position: fixed; inset: 0; z-index: 60; background: rgba(70,58,65,.45); display: none; align-items: center; justify-content: center; padding: 20px; }
+  .guide-overlay.show { display: flex; }
+  .guide-modal { width: min(560px, 94vw); max-height: 86vh; overflow-y: auto; background: var(--card); border: 2px solid var(--line); border-radius: 26px; padding: 22px 22px 26px; box-shadow: var(--shadow); position: relative; }
+  .guide-modal h3 { margin: 4px 0 12px; font-family: "ZCOOL KuaiLe","Nunito",sans-serif; color: var(--pink-deep); font-size: 20px; }
+  .guide-modal h4 { margin: 16px 0 6px; font-size: 14px; color: var(--text-strong); }
+  .guide-modal p, .guide-modal li { font-size: 13px; line-height: 1.7; color: var(--text); }
+  .guide-modal ol { padding-left: 20px; margin: 6px 0; }
+  .guide-modal .gstep { background: var(--tint); border: 2px solid var(--line); border-radius: 16px; padding: 12px 14px; margin: 10px 0; }
+  .guide-modal .gstep b { color: var(--pink-deep); }
+  .guide-modal .glink { display: inline-block; margin-top: 14px; background: linear-gradient(135deg, var(--yellow), var(--yellow-deep)); color: #7a4a5e; border: none; border-radius: 14px; padding: 10px 16px; font-size: 13px; font-weight: 800; text-decoration: none; box-shadow: 0 6px 16px rgba(255,194,77,.45); }
+  .guide-close-x { position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--pink); background: #fff; color: var(--pink-deep); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .guide-close-x:hover { background: var(--tint); transform: rotate(90deg); }
 </style>
 </head>
 <body>
@@ -212,7 +225,7 @@
     <div class="drawer-body">
       <!-- 题库编辑器 -->
       <div class="card">
-        <h2>⑥ 题库编辑 / 导入导出 <span class="tag">后台可视化</span></h2>
+        <h2>⑥ 题库编辑 / 导入导出</h2>
         <div class="ed-toolbar">
           <button class="sm" id="btnExport">⬇ 导出 JSON</button>
           <button class="sm ghost" id="btnImport">⬆ 导入 JSON</button>
@@ -220,6 +233,7 @@
           <button class="sm" id="btnExportCsv">⬇ 导出 CSV</button>
           <button class="sm ghost" id="btnImportCsv">⬆ 导入 CSV</button>
           <input type="file" id="fileInputCsv" accept=".csv,text/csv" style="display:none" />
+          <button class="sm ghost" id="btnGuide">📖 自定义题库指南</button>
           <span class="hint" id="bankStat"></span>
         </div>
         <div class="hint">导出 JSON 是「无损」备份（含话题表），可直接改完再导入覆盖。CSV 方便用 Excel/表格批量改文字，但话题标签会回退为 id。导入都会<b>整体覆盖</b>当前题库。</div>
@@ -302,6 +316,41 @@
       <button class="ghost" id="rebuild" style="width:100%">↻ 立即按当前设置重建转盘</button>
     </div>
   </aside>
+
+  <!-- 自定义题库指南弹窗 -->
+  <div class="guide-overlay" id="guideOverlay">
+    <div class="guide-modal">
+      <button class="guide-close-x" id="guideClose" aria-label="关闭">✕</button>
+      <h3>📖 自定义你的题库</h3>
+      <p>不想用官方那 646 道题？三种方式给你的转盘换上专属题目，从最省事到最自由：</p>
+
+      <div class="gstep">
+        <b>① 在界面上一条条加（最推荐，零基础）</b>
+        <ol>
+          <li>点右上角 <b>⚙️ 设置</b> → 打开「⑥ 题库编辑」。</li>
+          <li>在粉色「＋ 新增题目」框里写题干，选好分类（真心话/大冒险/直接喝/深度聊）。</li>
+          <li>大冒险再选个尺度；真心话/深度聊再选个话题范围。</li>
+          <li>点 <b>＋ 新增</b>，题目立刻进转盘，不用刷新。</li>
+          <li>想隐藏某题：在下方列表取消它的「用」勾选即可。</li>
+        </ol>
+      </div>
+
+      <div class="gstep">
+        <b>② 复制一段话给 AI，一键生成整套题库</b>
+        <p>把一份现成的「需求模板」复制给任意 AI（网页版 / 微信 AI 助手都行），它就会吐出一个可直接导入的题库文件。模板和填法见完整教程。</p>
+      </div>
+
+      <div class="gstep">
+        <b>③ 在官方题库上加菜</b>
+        <p>先导出官方题库，让 AI 在里面追加你自己的梗（保留原题），再导回应用。适合「喜欢官方题、只想补几条」的情况。</p>
+      </div>
+
+      <h4>📥 怎么把自定义题库用起来</h4>
+      <p>无论上面哪种方式，最后都是拿到一个 <b>.json</b> 文件 → 在「⑥ 题库编辑」点 <b>⬆ 导入 JSON</b> 即可。注意：导入会<b>整体覆盖</b>当前题库，换之前记得先点 <b>⬇ 导出 JSON</b> 备份。</p>
+
+      <a class="glink" id="guideFull" href="https://github.com/MistStrime/drinking-wheel-game/blob/main/自定义题库指南.md" target="_blank" rel="noopener">📄 查看完整教程（含 AI 模板）</a>
+    </div>
+  </div>
 
   <header>
     <h1>🍻 来一口大转盘</h1>
@@ -1085,6 +1134,10 @@
   document.getElementById('btnExport').addEventListener('click', doExport);
   document.getElementById('btnExportCsv').addEventListener('click', doExportCsv);
   document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileInput').click());
+  const guideOverlay = document.getElementById('guideOverlay');
+  document.getElementById('btnGuide').addEventListener('click', () => guideOverlay.classList.add('show'));
+  document.getElementById('guideClose').addEventListener('click', () => guideOverlay.classList.remove('show'));
+  guideOverlay.addEventListener('click', e => { if (e.target === guideOverlay) guideOverlay.classList.remove('show'); });
   document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) doImport(e.target.files[0]); e.target.value = ''; });
   document.getElementById('btnImportCsv').addEventListener('click', () => document.getElementById('fileInputCsv').click());
   document.getElementById('fileInputCsv').addEventListener('change', e => { if (e.target.files[0]) doImportCsv(e.target.files[0]); e.target.value = ''; });

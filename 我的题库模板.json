@@ -1,0 +1,90 @@
+{
+  "version": 3,
+  "stats": {
+    "total": 6,
+    "byCat": { "truth": 2, "dare": 2, "drink": 1, "deeptalk": 1 },
+    "byRisk": { "safe": 6, "mild": 0, "spicy": 0 },
+    "enabled": 6,
+    "disabled": 0,
+    "generatedAt": "2026-08-04"
+  },
+  "topics": {
+    "truth": [
+      { "id": "hobby", "label": "爱好兴趣", "defaultOn": true },
+      { "id": "school", "label": "校园时代", "defaultOn": true }
+    ],
+    "deeptalk": [
+      { "id": "life", "label": "人生意义", "defaultOn": true }
+    ]
+  },
+  "questions": [
+    {
+      "id": "truth-hobby-0001",
+      "cat": "truth",
+      "topic": "hobby",
+      "text": "你大学最疯狂的一次熬夜是在干嘛？",
+      "risk": "safe",
+      "difficulty": 1,
+      "adultOnly": false,
+      "enabled": true
+    },
+    {
+      "id": "truth-school-0001",
+      "cat": "truth",
+      "topic": "school",
+      "text": "你学生时代最社死的一件事是什么？",
+      "risk": "safe",
+      "difficulty": 1,
+      "adultOnly": false,
+      "enabled": true
+    },
+    {
+      "id": "dare-c0-0001",
+      "cat": "dare",
+      "text": "用你最拿手的方言唱一句歌",
+      "contact": 0,
+      "stranger": false,
+      "target": "self",
+      "scene": "any",
+      "risk": "safe",
+      "difficulty": 1,
+      "adultOnly": false,
+      "enabled": true
+    },
+    {
+      "id": "dare-c1-0001",
+      "cat": "dare",
+      "text": "和左边的人击掌并说一句土味情话",
+      "contact": 1,
+      "stranger": false,
+      "target": "partner",
+      "scene": "any",
+      "risk": "safe",
+      "difficulty": 1,
+      "adultOnly": false,
+      "enabled": true
+    },
+    {
+      "id": "drink-basic-0001",
+      "cat": "drink",
+      "text": "举杯敬今晚，自己痛快抿一大口！",
+      "who": "self",
+      "amount": "sip",
+      "combo": "",
+      "risk": "safe",
+      "difficulty": 1,
+      "adultOnly": false,
+      "enabled": true
+    },
+    {
+      "id": "deeptalk-life-0001",
+      "cat": "deeptalk",
+      "topic": "life",
+      "text": "如果明天就是世界末日，你最想和谁在一起？",
+      "risk": "safe",
+      "difficulty": 1,
+      "adultOnly": false,
+      "enabled": true
+    }
+  ]
+}
