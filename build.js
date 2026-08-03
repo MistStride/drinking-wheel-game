@@ -22,5 +22,7 @@ const bank = 'window.QUESTION_BANK = ' + bankJson + ';\n';
 
 const out = src.replace('/*__QUESTION_BANK__*/', bank);
 fs.writeFileSync(path + '/app.html', out);
-console.log('已生成 app.html（自包含单文件），大小 =', (out.length / 1024).toFixed(1), 'KB');
+// GitHub Pages 访问根网址时默认打开 index.html，故同步写一份，保证线上 = 最新 app
+fs.writeFileSync(path + '/index.html', out);
+console.log('已生成 app.html / index.html（自包含单文件），大小 =', (out.length / 1024).toFixed(1), 'KB');
 console.log('题库内联题数 =', QB.questions.length, '；仍依赖外部 CDN: lucky-canvas');

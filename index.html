@@ -3,143 +3,298 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>来一口大转盘 · 可定制 + 暗箱操作</title>
+<title>🍻 来一口大转盘</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
 <style>
+  /* ============ 糖果童趣主题 ============ */
   :root {
-    --bg: #0f1226;
-    --panel: #1a1f3a;
-    --panel-2: #232a4d;
-    --text: #eef1ff;
-    --muted: #9aa3c7;
-    --accent: #ff5a5f;
-    --line: #2f3766;
+    --pink: #ff9ec4; --pink-deep: #ff6b9d;
+    --yellow: #ffd56b; --yellow-deep: #ffc24d;
+    --blue: #9fd3ff; --lav: #c9b6ff;
+    --bg-1: #fff2f7; --bg-2: #f3e9ff; --bg-3: #e8f4ff;
+    --text: #5a4a52; --text-strong: #463a41; --muted: #a08f98;
+    --card: #ffffff; --tint: #fff7fb;
+    --line: rgba(255,158,196,.40);
+    --shadow: 0 14px 34px rgba(255,142,177,.22);
+    --radius: 24px;
+    --bounce: cubic-bezier(.34,1.56,.64,1);
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
-    margin: 0;
-    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-    background: radial-gradient(1200px 600px at 20% -10%, #1c2350, var(--bg));
-    color: var(--text);
-    min-height: 100vh;
+    margin: 0; color: var(--text); min-height: 100vh; line-height: 1.6;
+    font-family: "Nunito", -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: linear-gradient(135deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+    background-attachment: fixed;
   }
-  header {
-    padding: 18px 24px 6px;
+  /* 漂浮的糖果光斑 */
+  body::before {
+    content: ""; position: fixed; inset: -10%; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(420px 420px at 10% 12%, rgba(255,158,196,.35), transparent 60%),
+      radial-gradient(380px 380px at 88% 18%, rgba(201,182,255,.32), transparent 60%),
+      radial-gradient(360px 360px at 75% 90%, rgba(159,211,255,.30), transparent 60%),
+      radial-gradient(300px 300px at 20% 85%, rgba(255,213,107,.30), transparent 60%);
+    animation: floaty 14s ease-in-out infinite alternate;
   }
-  header h1 { margin: 0; font-size: 22px; letter-spacing: 1px; }
-  header p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
-  .layout {
-    display: flex;
-    gap: 22px;
-    padding: 18px 24px 40px;
-    align-items: flex-start;
-    flex-wrap: wrap;
+  @keyframes floaty {
+    from { transform: translate(0,0) scale(1); }
+    to { transform: translate(-2%, -2%) scale(1.06); }
   }
+  header, .layout, footer { position: relative; z-index: 1; }
+  header { padding: 30px 64px 8px 32px; text-align: center; }
+  header h1 {
+    margin: 0; font-size: 32px; font-weight: 400; letter-spacing: 1px;
+    font-family: "ZCOOL KuaiLe", "Nunito", sans-serif;
+    color: var(--pink-deep);
+    text-shadow: 2px 3px 0 #fff, 4px 6px 0 rgba(255,158,196,.35);
+    transition: transform .3s var(--bounce);
+  }
+  header h1:hover { transform: rotate(-2deg) scale(1.04); }
+  header p { margin: 10px auto 0; max-width: 640px; color: var(--muted); font-size: 13px; }
+  .layout { display: flex; gap: 26px; padding: 22px 32px 52px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
   .stage {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-    min-width: 460px;
+    position: relative; background: var(--card); border: 2px solid var(--line);
+    border-radius: 30px; padding: 28px; display: flex; flex-direction: column;
+    align-items: center; gap: 16px; min-width: 470px; box-shadow: var(--shadow);
   }
-  #wheel { width: 420px; height: 420px; }
+  .stage::before {
+    content: ""; position: absolute; inset: -30px; z-index: -1; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,158,196,.45), transparent 62%);
+    filter: blur(26px);
+  }
+  #wheel { width: 430px; height: 430px; }
   .result {
-    width: 100%;
-    min-height: 70px;
-    border-radius: 12px;
-    padding: 12px 14px;
-    background: var(--panel-2);
-    border: 1px solid var(--line);
-    font-size: 15px;
-    line-height: 1.5;
+    width: 100%; min-height: 86px; border-radius: 18px; padding: 14px 16px;
+    background: var(--tint); border: 2px solid var(--line); font-size: 15px; line-height: 1.6;
+    box-shadow: inset 0 2px 6px rgba(255,158,196,.18);
   }
   .result .pill {
-    display: inline-block;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 2px 10px;
-    border-radius: 999px;
-    color: #0f1226;
-    margin-bottom: 8px;
+    display: inline-block; font-size: 12px; font-weight: 800; padding: 4px 13px;
+    border-radius: 999px; color: #fff; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--pink), var(--lav));
+    box-shadow: 0 4px 10px rgba(255,107,157,.35);
   }
   .result.placeholder { color: var(--muted); font-size: 14px; }
-  .round-info {
-    color: var(--muted);
-    font-size: 13px;
-    display: flex;
-    gap: 12px;
-    align-items: center;
-  }
-  .round-info b { color: var(--text); }
-
+  .round-info { color: var(--muted); font-size: 13px; display: flex; gap: 12px; align-items: center; }
+  .round-info b { color: var(--text-strong); }
   .panel {
-    flex: 1;
-    min-width: 320px;
-    max-width: 460px;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    padding: 18px;
+    flex: 1; min-width: 350px; max-width: 560px; background: var(--card);
+    border: 2px solid var(--line); border-radius: 30px; padding: 22px;
+    box-shadow: var(--shadow);
   }
   .panel h2 {
-    font-size: 15px;
-    margin: 0 0 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 17px; margin: 0 0 14px; display: flex; align-items: center; gap: 8px;
+    font-family: "ZCOOL KuaiLe", "Nunito", sans-serif; color: var(--text-strong);
   }
-  .panel h2 .tag { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .panel h2 .tag { font-size: 11px; color: var(--muted); font-weight: 400; font-family: "Nunito", sans-serif; }
   .card {
-    background: var(--panel-2);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 14px;
-    margin-bottom: 14px;
+    background: var(--tint); border: 2px solid var(--line); border-radius: var(--radius);
+    padding: 16px; margin-bottom: 16px;
+    transition: transform .25s var(--bounce), box-shadow .25s ease;
   }
-  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0; }
+  .card:hover { transform: translateY(-4px) rotate(-.5deg); box-shadow: 0 18px 38px rgba(255,142,177,.28); }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
   .row.between { justify-content: space-between; }
-  label.chk { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 14px; }
+  label.chk { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 14px; color: var(--text); }
+  label.chk input { width: 17px; height: 17px; accent-color: var(--pink-deep); }
   .sub { padding-left: 22px; color: var(--muted); font-size: 13px; }
   select, input[type="number"], input[type="text"] {
-    background: #11152e;
-    color: var(--text);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 6px 8px;
-    font-size: 13px;
+    background: #fff; color: var(--text-strong); border: 2px solid var(--line);
+    border-radius: 12px; padding: 7px 11px; font-size: 13px;
+    transition: border-color .15s, box-shadow .15s;
   }
+  select:focus, input:focus { outline: none; border-color: var(--pink-deep); box-shadow: 0 0 0 4px rgba(255,158,196,.30); }
   input[type="number"] { width: 64px; }
+  input[type="text"].wide { width: 100%; }
   button {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: 7px 12px;
-    font-size: 13px;
-    cursor: pointer;
-    font-weight: 600;
+    background: linear-gradient(135deg, var(--yellow), var(--yellow-deep));
+    color: #7a4a5e; border: none; border-radius: 14px; padding: 9px 16px; font-size: 13px;
+    cursor: pointer; font-weight: 800; box-shadow: 0 6px 16px rgba(255,194,77,.45);
+    transition: transform .2s var(--bounce), box-shadow .2s ease, filter .2s ease;
   }
-  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
-  button.sm { padding: 4px 9px; font-size: 12px; }
-  .rules { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+  button:hover { transform: translateY(-3px) rotate(-1.5deg) scale(1.04); box-shadow: 0 12px 22px rgba(255,194,77,.55); }
+  button:active { transform: translateY(0) rotate(1deg) scale(.95); }
+  button.ghost { background: #fff; border: 2px solid var(--pink); color: var(--pink-deep); box-shadow: none; }
+  button.ghost:hover { background: var(--tint); transform: translateY(-2px) rotate(1deg); }
+  button.sm { padding: 6px 12px; font-size: 12px; border-radius: 12px; }
+  .rules { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
   .rule {
     display: flex; align-items: center; justify-content: space-between;
-    background: #11152e; border: 1px solid var(--line);
-    border-radius: 8px; padding: 6px 10px; font-size: 13px;
+    background: #fff; border: 2px solid var(--line); border-radius: 14px;
+    padding: 8px 12px; font-size: 13px; color: var(--text);
+    transition: transform .2s var(--bounce);
   }
-  .cat-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-  .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
-  footer { color: var(--muted); font-size: 12px; padding: 0 24px 30px; }
-  hr.sep { border: none; border-top: 1px solid var(--line); margin: 12px 0; }
+  .rule:hover { transform: scale(1.02) rotate(.4deg); }
+  .cat-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.6; }
+  footer { color: var(--muted); font-size: 12px; padding: 0 32px 36px; text-align: center; }
+  hr.sep { border: none; border-top: 2px dashed var(--line); margin: 16px 0; }
+  .rig-results { max-height: 168px; overflow: auto; border: 2px solid var(--line); border-radius: 14px; margin-top: 6px; background: #fff; }
+  .rig-item { display: flex; gap: 8px; align-items: center; padding: 8px 10px; cursor: pointer; border-bottom: 2px solid var(--line); font-size: 13px; color: var(--text); transition: background .15s, transform .15s var(--bounce); }
+  .rig-item:last-child { border-bottom: none; }
+  .rig-item:hover { background: var(--tint); transform: translateX(3px); }
+  .rig-item.sel { background: rgba(255,158,196,.30); }
+  .rig-item span.txt { flex: 1; line-height: 1.4; }
+  /* 编辑器表格 */
+  .ed-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+  .ed-list { max-height: 360px; overflow: auto; border: 2px solid var(--line); border-radius: 16px; background: #fff; }
+  table.ed { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.ed th {
+    position: sticky; top: 0; background: var(--pink); text-align: left; padding: 9px 11px;
+    color: #fff; font-weight: 700; border-bottom: 2px solid var(--line);
+  }
+  table.ed td { padding: 7px 11px; border-bottom: 2px solid var(--line); vertical-align: middle; color: var(--text); }
+  table.ed input[type="text"] { width: 100%; min-width: 160px; }
+  table.ed .risk { padding: 3px 6px; font-size: 12px; border-radius: 8px; }
+  .collapsed { display: none; }
+  /* 滚动条 */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--pink); border-radius: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  /* 右上角设置按钮 + 抽屉 */
+  .gear-btn {
+    position: fixed; top: 16px; right: 16px; z-index: 50;
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; line-height: 1; padding: 0;
+    background: linear-gradient(135deg, var(--yellow), var(--yellow-deep));
+    border: 2px solid #fff; box-shadow: 0 8px 20px rgba(255,158,196,.45);
+    cursor: pointer; transition: transform .3s var(--bounce), box-shadow .2s ease;
+  }
+  .gear-btn:hover { transform: rotate(40deg) scale(1.08); box-shadow: 0 12px 26px rgba(255,158,196,.6); }
+  .gear-btn:active { transform: scale(.9); }
+  .settings-backdrop {
+    position: fixed; inset: 0; z-index: 60;
+    background: rgba(90,58,71,.30); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+    opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility .25s ease;
+  }
+  .settings-backdrop.open { opacity: 1; visibility: visible; }
+  .settings-drawer {
+    position: fixed; top: 0; right: 0; z-index: 70;
+    width: min(440px, 94vw); height: 100vh; height: 100dvh;
+    background: var(--tint);
+    border-left: 2px solid var(--line);
+    box-shadow: -18px 0 44px rgba(255,142,177,.30);
+    transform: translateX(102%); transition: transform .34s var(--bounce);
+    display: flex; flex-direction: column;
+  }
+  .settings-drawer.open { transform: translateX(0); }
+  .drawer-head {
+    flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px; border-bottom: 2px dashed var(--line);
+    font-family: "ZCOOL KuaiLe", "Nunito", sans-serif; font-size: 18px; color: var(--text-strong);
+  }
+  .drawer-close {
+    background: #fff; border: 2px solid var(--pink); color: var(--pink-deep);
+    width: 34px; height: 34px; border-radius: 50%; font-size: 15px; padding: 0;
+    display: flex; align-items: center; justify-content: center; box-shadow: none;
+  }
+  .drawer-close:hover { background: var(--tint); transform: rotate(90deg) scale(1.06); }
+  .drawer-body { flex: 1 1 auto; overflow-y: auto; padding: 16px 14px 28px; }
 </style>
 </head>
 <body>
+  <button id="settingsBtn" class="gear-btn" aria-label="设置" title="设置">⚙️</button>
+  <div id="settingsBackdrop" class="settings-backdrop"></div>
+  <aside id="settingsDrawer" class="settings-drawer" aria-hidden="true">
+    <div class="drawer-head">
+      <span>⚙️ 设置</span>
+      <button id="settingsClose" class="drawer-close" aria-label="关闭">✕</button>
+    </div>
+    <div class="drawer-body">
+      <!-- 暗箱操作 -->
+      <div class="card">
+        <h2>⑥ 暗箱操作 <span class="tag">指定某次必中</span></h2>
+        <div class="row">
+          <span>第</span><input type="number" id="exactN" min="1" value="3" /><span>次必中类别</span>
+          <select id="exactCat"></select><button id="addExact">添加</button>
+        </div>
+        <div class="row">
+          <span>前</span><input type="number" id="prefixK" min="1" value="2" /><span>次必中类别</span>
+          <select id="prefixCat"></select><button id="addPrefix">添加</button>
+        </div>
+        <hr class="sep" />
+        <div class="sub" style="padding-left:0">
+          <b>必中指定题目</b>（先搜索确认某题，再指定轮次）
+          <div class="row" style="margin-top:6px">
+            <input type="text" id="rigSearch" placeholder="搜索题干…（仅限当前生效题目）" class="wide" style="flex:1;min-width:160px" />
+          </div>
+          <div id="rigResults" class="rig-results"></div>
+          <div class="row" style="margin-top:6px">
+            <span>第</span><input type="number" id="qExactN" min="1" value="1" /><span>次必中此题</span>
+            <button id="addQExact">添加</button>
+          </div>
+          <div class="row">
+            <span>前</span><input type="number" id="qPrefixK" min="1" value="2" /><span>次必中此题</span>
+            <button id="addQPrefix">添加</button>
+          </div>
+          <div class="hint">搜索结果只来自「当前会进转盘」的题目；点选一条后再添加规则。</div>
+        </div>
+        <div class="rules" id="ruleList"></div>
+        <div class="hint">「第 N 次」只生效一次；「前 K 次」在其范围内每次都生效。轮次归零后规则可再次触发。</div>
+        <div class="hint">精准暗箱指定的题会强制入选转盘，确保能按设定命中。</div>
+      </div>
+
+      <button class="ghost" id="rebuild" style="width:100%">↻ 立即按当前设置重建转盘</button>
+
+      <hr class="sep" />
+
+      <!-- 题库编辑器 -->
+      <div class="card">
+        <h2>⑦ 题库编辑 / 导入导出 <span class="tag">后台可视化</span></h2>
+        <div class="ed-toolbar">
+          <button class="sm" id="btnExport">⬇ 导出 JSON</button>
+          <button class="sm ghost" id="btnImport">⬆ 导入 JSON</button>
+          <input type="file" id="fileInput" accept=".json,application/json" style="display:none" />
+          <button class="sm" id="btnExportCsv">⬇ 导出 CSV</button>
+          <button class="sm ghost" id="btnImportCsv">⬆ 导入 CSV</button>
+          <input type="file" id="fileInputCsv" accept=".csv,text/csv" style="display:none" />
+          <span class="hint" id="bankStat"></span>
+        </div>
+        <div class="hint">导出 JSON 是「无损」备份（含话题表），可直接改完再导入覆盖。CSV 方便用 Excel/表格批量改文字，但话题标签会回退为 id。导入都会<b>整体覆盖</b>当前题库。</div>
+        <div class="ed-toolbar">
+          <select id="edCat"><option value="all">全部分类</option></select>
+          <select id="edTopic"><option value="all">全部话题范围</option></select>
+          <span class="sub" style="padding-left:0">尺度</span>
+          <select id="edLevel" title="大冒险尺度分级（0 社牛solo / 1 礼貌试探 / 2 升温互动 / 3 全场尖叫·需限制级模式）">
+            <option value="all">全部尺度</option>
+            <option value="0">0 · 社牛solo（表情包模仿/霸总台词）</option>
+            <option value="1">1 · 礼貌试探（握手/击掌）</option>
+            <option value="2">2 · 升温互动（拥抱/喂食）</option>
+            <option value="3">3 · 全场尖叫（贴面/耳语）</option>
+          </select>
+          <input type="text" id="edSearch" placeholder="搜索题干…" class="wide" style="flex:1;min-width:140px" />
+          <button class="sm ghost" id="edRefresh">刷新</button>
+        </div>
+        <div class="ed-toolbar">
+          <input type="text" id="edNewText" placeholder="新题题干…" style="flex:1;min-width:160px" />
+          <select id="edNewCat"></select>
+          <select id="edNewTopic"></select>
+          <select id="edNewLevel" title="大冒险尺度分级">
+            <option value="0">尺度 0 · 社牛solo</option>
+            <option value="1">尺度 1 · 礼貌试探</option>
+            <option value="2">尺度 2 · 升温互动</option>
+            <option value="3">尺度 3 · 全场尖叫</option>
+          </select>
+          <button class="sm" id="edAdd">＋ 新增</button>
+        </div>
+        <div class="ed-list">
+          <table class="ed">
+            <thead><tr><th style="width:34px">用</th><th>题干</th><th style="width:92px">risk</th><th style="width:84px">尺度</th><th style="width:54px"></th></tr></thead>
+            <tbody id="edBody"></tbody>
+          </table>
+        </div>
+        <div class="hint">编辑后转盘自动按设置重建；「用」取消勾选即把该题移出转盘。导入会整体替换当前题库。</div>
+      </div>
+    </div>
+  </aside>
+
   <header>
-    <h1>🍻 来一口大转盘 · 可定制 + 暗箱操作</h1>
-    <p>基于 lucky-canvas 构建。开关实时重建转盘；暗箱规则在「开始」时生效。请确保参与者知情且自愿，保持玩笑尺度。</p>
+    <h1>🍻 来一口大转盘</h1>
+    <p id="subtitle">转盘一转，今晚的玩法交给运气——真心话、大冒险、直接喝，还是 Deeptalk？</p>
   </header>
 
   <div class="layout">
@@ -155,167 +310,243 @@
 
     <!-- 右：控制面板 -->
     <div class="panel">
-      <!-- 分类开关 -->
+      <!-- 转盘抽取 -->
       <div class="card">
-        <h2>① 内容开关 <span class="tag">勾选要放进转盘的类别</span></h2>
-        <div class="row">
-          <label class="chk"><input type="checkbox" data-cat="truth" checked /> 真心话</label>
-          <label class="chk"><input type="checkbox" data-cat="dare" checked /> 大冒险</label>
-          <label class="chk"><input type="checkbox" data-cat="drink" checked /> 直接喝</label>
-          <label class="chk"><input type="checkbox" data-cat="deeptalk" checked /> Deeptalk</label>
+        <h2>① 转盘抽取 <span class="tag">选择抽题方式</span></h2>
+        <div class="row" style="margin-top:8px">
+          <span>抽取模式：</span>
+          <label class="chk"><input type="radio" name="wheelMode" value="branch" checked /> 按类型（分支）</label>
+          <label class="chk"><input type="radio" name="wheelMode" value="question" /> 按题目</label>
+          <span class="sub" style="padding-left:0">抽 <input type="number" id="qSampleN" min="1" max="1000" value="50" style="width:60px" /> 道（仅「按题目」生效，按类别比例随机抽）</span>
         </div>
+        <div class="row" style="margin-top:6px">
+          <label class="chk"><input type="checkbox" id="allowRepeat" /> 允许重复抽取（不勾则抽中后该题移出转盘，不会再次抽中）</label>
+          <button class="sm ghost" id="resetDrawn">↺ 重置已抽</button>
+        </div>
+        <div class="hint" id="wheelModeHint">「按类型」：每格代表一个类别，停下后在该类内随机抽一题；「按题目」：按类别比例从生效题随机抽若干道放进转盘，停下直接显示该题原文。</div>
       </div>
 
-      <!-- 真心话话题 -->
+      <!-- 分类开关 -->
       <div class="card">
-        <h2>② 真心话 · 话题范围</h2>
+        <h2>② 内容开关 <span class="tag">勾选要放进转盘的类别</span></h2>
+        <div class="row" id="catSwitches"></div>
+        <label class="chk" style="margin-top:8px"><input type="checkbox" id="adultMode" /> 限制级模式（解锁前任 / 迷恋暧昧 / 身体探索 等 spicy 话题，并放开大冒险「全场尖叫（3 级）」）</label>
+        <div class="hint">开启后自动勾选限制级话题并放开「全场尖叫（3 级）」；关闭则收回。</div>
+      </div>
+
+      <!-- 真心话题 -->
+      <div class="card">
+        <h2>③ 真心话 · 话题范围</h2>
         <div id="truthTopics" class="sub"></div>
       </div>
 
       <!-- 大冒险设置 -->
       <div class="card">
-        <h2>③ 大冒险 · 尺度</h2>
+        <h2>④ 大冒险 · 尺度</h2>
         <div class="row">
-          <label class="chk"><input type="checkbox" id="allowStranger" /> 允许「骚扰陌生人」类</label>
+          <label class="chk"><input type="checkbox" id="allowStranger" checked /> 允许「骚扰陌生人」类</label>
         </div>
         <div class="row">
           <span>最大肢体接触程度：</span>
           <select id="maxContact">
             <option value="0">0 · 社牛solo（表情包模仿/霸总台词）</option>
-            <option value="1" selected>1 · 礼貌试探（握手/击掌）</option>
-            <option value="2">2 · 升温互动（拥抱/喂食）</option>
+            <option value="1">1 · 礼貌试探（握手/击掌）</option>
+            <option value="2" selected>2 · 升温互动（拥抱/喂食）</option>
+            <option value="3">3 · 全场尖叫（贴面/耳语）</option>
           </select>
         </div>
-        <div class="hint">高于所选等级的「大冒险」不会进入转盘。</div>
+        <div class="hint">高于所选等级、或需限制级模式的「大冒险」不会进入转盘。</div>
       </div>
 
-      <!-- 暗箱操作 -->
+      <!-- 直接喝设置 -->
       <div class="card">
-        <h2>④ 暗箱操作 <span class="tag">指定某次必中某类</span></h2>
+        <h2>⑤ 直接喝 · 量级</h2>
         <div class="row">
-          <span>第</span>
-          <input type="number" id="exactN" min="1" value="3" />
-          <span>次必中</span>
-          <select id="exactCat"></select>
-          <button id="addExact">添加</button>
+          <label class="chk"><input type="checkbox" id="allowOthers" /> 允许「指定他人喝 / 接力」类</label>
         </div>
         <div class="row">
-          <span>前</span>
-          <input type="number" id="prefixK" min="1" value="2" />
-          <span>次必中</span>
-          <select id="prefixCat"></select>
-          <button id="addPrefix">添加</button>
+          <span>最大饮酒量：</span>
+          <select id="maxAmount">
+            <option value="sip">最温和 · 基础喝 / 趣味喝法</option>
+            <option value="glass">喝一杯</option>
+            <option value="chug">罚酒干杯（最猛）</option>
+          </select>
         </div>
-        <div class="rules" id="ruleList"></div>
-        <div class="hint">「第 N 次」只生效一次；「前 K 次」在其范围内每次都生效。轮次归零后规则可再次触发。</div>
+        <div class="hint">高于所选量级的「直接喝」不会进入转盘。</div>
       </div>
 
-      <button class="ghost" id="rebuild" style="width:100%">↻ 立即按当前设置重建转盘</button>
     </div>
   </div>
 
-  <footer>二次开发提示：题库在 <code>CONFIG</code> 里改；概率权重改各分类 <code>weight</code>；暗箱逻辑在 <code>resolveRigging()</code>。</footer>
+  <footer>🍻 转盘一转，今晚的玩法交给运气——玩得开心，量力而行！</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/lucky-canvas@1.7.25"></script>
   <script>
-  // ===================== 题库与分类配置 =====================
-  const CONFIG = {
-    truth: {
-      label: '真心话', color: '#ffb703', weight: 3, enabled: true,
-      topics: [
-        { id: 'hobby', label: '爱好', enabled: true, questions: [
-          '你最近迷上什么新爱好？',
-          '如果有一整天空闲，你会做什么？',
-          '你手机里最舍不得删的App是哪个？'
-        ]},
-        { id: 'childhood', label: '童年', enabled: true, questions: [
-          '童年最尴尬的一件事是什么？',
-          '小时候最想要的礼物是什么？',
-          '你小时候的绰号是什么？'
-        ]},
-        { id: 'ex', label: '前任', enabled: false, questions: [
-          '最后一段感情为什么结束？',
-          '你还偷偷关注前任的动态吗？',
-          '前任里你最对不起谁？'
-        ]},
-      ]
-    },
-    dare: {
-      label: '大冒险', color: '#ef476f', weight: 3, enabled: true,
-      allowStranger: false, maxContact: 1,
-      items: [
-        { text: '给左边的人一个真诚的赞美', contact: 0, stranger: false },
-        { text: '对右边的人说一句土味情话', contact: 0, stranger: false },
-        { text: '模仿一位在场的人，让大家猜是谁', contact: 1, stranger: false },
-        { text: '和左边的人十指相扣10秒', contact: 2, stranger: false },
-        { text: '去隔壁桌陌生人那里要一个联系方式', contact: 0, stranger: true },
-      ]
-    },
-    drink: {
-      label: '直接喝', color: '#06d6a0', weight: 2, enabled: true,
-      amounts: ['喝一口', '干杯 🍻', '罚一杯']
-    },
-    deeptalk: {
-      label: 'Deeptalk', color: '#118ab2', weight: 1, enabled: true,
-      topics: [
-        { id: 'life', label: '人生', enabled: true, questions: [
-          '你人生中最自豪的一个决定是什么？',
-          '十年后的你希望过怎样的生活？'
-        ]},
-        { id: 'fear', label: '内心', enabled: true, questions: [
-          '你最害怕失去的是什么？',
-          '此刻心里压着的一件事是什么？'
-        ]},
-      ]
-    }
+  window.QUESTION_BANK = {"version":3,"stats":{"total":646,"byCat":{"truth":319,"deeptalk":100,"dare":199,"drink":28},"byRisk":{"safe":545,"spicy":76,"mild":25},"enabled":566,"disabled":80,"generatedAt":"2026-08-03"},"topics":{"truth":[{"id":"hobby","label":"爱好兴趣","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"childhood","label":"童年回忆","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"school","label":"校园时代","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"family","label":"家庭亲情","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"friendship","label":"友情底线","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"love","label":"爱情观念","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"ex","label":"前任纠葛","defaultOn":false,"spicy":true,"adultOnly":true},{"id":"secret","label":"黑料糗事","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"money","label":"金钱消费","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"work","label":"职场学业","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"body","label":"外貌身材","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"intimacy","label":"迷恋暧昧","defaultOn":false,"spicy":true,"adultOnly":true},{"id":"bodyexp","label":"身体探索","defaultOn":false,"spicy":true,"adultOnly":true},{"id":"role","label":"角色戏精","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"dream","label":"理想人生","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"social","label":"人情世故","defaultOn":true,"spicy":false,"adultOnly":false},{"id":"weakness","label":"软肋恐惧","defaultOn":true,"spicy":false,"adultOnly":false}],"deeptalk":[{"id":"life","label":"人生意义","defaultOn":true},{"id":"fear","label":"内心恐惧","defaultOn":true},{"id":"relation","label":"人际关系","defaultOn":true},{"id":"self","label":"自我认知","defaultOn":true},{"id":"regret","label":"遗憾后悔","defaultOn":true},{"id":"value","label":"价值观","defaultOn":true},{"id":"future","label":"未来憧憬","defaultOn":true}]},"questions":[{"id":"truth-hobby-0001","cat":"truth","topic":"hobby","text":"你最上头的一次氪金体验是什么？买了什么游戏或道具？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0002","cat":"truth","topic":"hobby","text":"你愿意为哪个运动或健身项目花大把时间和金钱？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0003","cat":"truth","topic":"hobby","text":"你有没有偷偷入坑但不轻易告诉别人的小众爱好？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0005","cat":"truth","topic":"hobby","text":"你最近迷上了什么新运动、户外项目或健身课？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0006","cat":"truth","topic":"hobby","text":"你最拿得出手的特长或才艺是什么？现场露一手？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0007","cat":"truth","topic":"hobby","text":"你自己心情不好时最解压、最治愈的小癖好是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0009","cat":"truth","topic":"hobby","text":"你手机里最舍不得删、陪伴你最久的游戏是哪款？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0010","cat":"truth","topic":"hobby","text":"你愿意为哪项手工、拼积木或DIY花上一整天不吃饭？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0012","cat":"truth","topic":"hobby","text":"你最珍贵或最得意的盲盒、手办收藏是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0013","cat":"truth","topic":"hobby","text":"你最近每天必刷、最推崇的宝藏博主是谁？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0014","cat":"truth","topic":"hobby","text":"你手机里最舍不得删的一段聊天记录是关于什么的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0015","cat":"truth","topic":"hobby","text":"你最长一次连续刷短视频或直播刷了多久？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0016","cat":"truth","topic":"hobby","text":"你相册里最舍不得删、最珍贵的一张照片是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0017","cat":"truth","topic":"hobby","text":"如果有一整天完全属于你且没人打扰，你最想干嘛？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0019","cat":"truth","topic":"hobby","text":"你最近一口气通宵追完的宝藏剧集或动漫是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0022","cat":"truth","topic":"hobby","text":"你最骄傲或最贵的一双球鞋/包包是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0028","cat":"truth","topic":"hobby","text":"你最疯狂或最上头的一次追星/追二次元经历是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0035","cat":"truth","topic":"hobby","text":"你最拿得出手的招牌菜是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0036","cat":"truth","topic":"hobby","text":"你为了打卡网红店/网红景点做过最排队疯狂的事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0038","cat":"truth","topic":"hobby","text":"你穿过最出彩或者最社死的一套穿搭是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-0043","cat":"truth","topic":"hobby","text":"你单曲循环最多次的私人歌单叫什么名字？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-1001","cat":"truth","topic":"hobby","text":"你买过最贵但利用率最低的“智商税”兴趣装备是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-1002","cat":"truth","topic":"hobby","text":"如果不需要考虑金钱，你最想把哪项爱好玩到顶尖水平？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-1003","cat":"truth","topic":"hobby","text":"你有没有买过什么盲盒/卡牌，拆开后让你当场心碎的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-1004","cat":"truth","topic":"hobby","text":"你参加过的最折腾但最刺激的户外/旅行体验是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-1005","cat":"truth","topic":"hobby","text":"你最近在小红书/抖音上疯狂被种草但还没买的东西是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-1006","cat":"truth","topic":"hobby","text":"你有没有为了某个爱好连熬好几天夜的爆肝经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-1007","cat":"truth","topic":"hobby","text":"你吃过最惊艳、至今念念不忘的宝藏美食是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-hobby-1008","cat":"truth","topic":"hobby","text":"你有哪个坚持了很多年、身边很少有人知道的宝藏技能？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0002","cat":"truth","topic":"childhood","text":"你小时候被父母逼着学的兴趣班，现在还会吗？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0003","cat":"truth","topic":"childhood","text":"你小时候偷偷半夜爬起来干过最刺激的事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0005","cat":"truth","topic":"childhood","text":"小时候最馋但父母死活不让吃的零食是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0006","cat":"truth","topic":"childhood","text":"你小时候非常中二的口头禅或招式台词是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0007","cat":"truth","topic":"childhood","text":"小时候最梦寐以求但一直没得到的礼物是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0008","cat":"truth","topic":"childhood","text":"你童年最要好但后来渐行渐远失联的玩伴是谁？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0010","cat":"truth","topic":"childhood","text":"你童年记忆最深刻、最温暖的一件事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0011","cat":"truth","topic":"childhood","text":"你小时候被起过最搞笑或最想删掉的绰号是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0012","cat":"truth","topic":"childhood","text":"你小时候暗恋过班上的哪位同学？当时怎么表现的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0013","cat":"truth","topic":"childhood","text":"你小时候最害怕的老师是谁？因为什么被罚过？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0014","cat":"truth","topic":"childhood","text":"你童年最尴尬、至今想起来还抠脚的一件事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0017","cat":"truth","topic":"childhood","text":"你小时候闯过最严重或最惊险、挨打最惨的一次祸是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0018","cat":"truth","topic":"childhood","text":"你小时候有没有尝试过离家出走？因为什么导火索？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0020","cat":"truth","topic":"childhood","text":"小时候最想养但父母死活不同意的宠物是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0022","cat":"truth","topic":"childhood","text":"你小时候偷偷练过且至今还记得的“绝技”是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0025","cat":"truth","topic":"childhood","text":"你小时候为了骗零花钱/假装生病撒过最离谱的谎是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0026","cat":"truth","topic":"childhood","text":"你小时候最成功或最搞笑的一次恶作剧是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0030","cat":"truth","topic":"childhood","text":"你童年在小伙伴面前做过最显摆、最炫耀的一件事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0036","cat":"truth","topic":"childhood","text":"小时候最 wanted 一款电子产品或游戏机是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0042","cat":"truth","topic":"childhood","text":"你小时候最害怕或者留下阴影的动画片/影视剧是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-0044","cat":"truth","topic":"childhood","text":"你小时候在作文里写过的理想职业是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-1001","cat":"truth","topic":"childhood","text":"小时候为了买心爱的玩具，你做过最机智的攒钱法是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-1002","cat":"truth","topic":"childhood","text":"你童年记忆里味道最惊艳、现在再也吃不到的食物是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-1003","cat":"truth","topic":"childhood","text":"小时候因为看电视剧，你做过什么中二度拉满的模仿？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-1004","cat":"truth","topic":"childhood","text":"小时候被爸妈藏起来的压岁钱，后来你去追问过了吗？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-childhood-1005","cat":"truth","topic":"childhood","text":"你童年最相信的一个谎言是什么？（比如吃西瓜籽肚子里会长西瓜）","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0004","cat":"truth","topic":"school","text":"学生时代你觉得最受折磨的一门考试或体育体测是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0005","cat":"truth","topic":"school","text":"你学生时代最讨厌布置哪种形式的作业？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0007","cat":"truth","topic":"school","text":"你上学时被老师请过家长吗？因为什么导火索？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0008","cat":"truth","topic":"school","text":"你有没有上课睡觉被老师当场抓包叫醒的经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0009","cat":"truth","topic":"school","text":"你运动会上最社死或最后悔的一幕回忆是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0010","cat":"truth","topic":"school","text":"你校园时代最热血拼命的一次比赛或活动是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0013","cat":"truth","topic":"school","text":"你宿舍深夜聊天/吃夜宵最温馨难忘的一幕是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0016","cat":"truth","topic":"school","text":"你宿舍里发生过最尴尬、最破防的一件事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0020","cat":"truth","topic":"school","text":"你校园里最佩服或觉得最风云的同学是谁？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0023","cat":"truth","topic":"school","text":"你最怀念的高中/大学晚自习时光是什么样的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0024","cat":"truth","topic":"school","text":"你复习很久但彻底考砸翻车的一门考试是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0029","cat":"truth","topic":"school","text":"你母校校园里最令你怀念、发生过故事的一个角落是哪里？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0030","cat":"truth","topic":"school","text":"你在学生时代瞒着老师和父母偷偷做过的最大胆的事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0031","cat":"truth","topic":"school","text":"你上学时有没有暗自把谁当成竞争暗号和较劲对象？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0036","cat":"truth","topic":"school","text":"你有没有抄作业/考试小抄被当场抓包的经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0041","cat":"truth","topic":"school","text":"你有没有上课传纸条被老师当众朗诵的尴尬经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-0042","cat":"truth","topic":"school","text":"你为了迟到不被扣分做过最搞笑的伪装翻墙经历是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-1001","cat":"truth","topic":"school","text":"学生时代哪一次运动会或社团活动，让你体验到了高光主角感觉？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-1002","cat":"truth","topic":"school","text":"你上学时干过最惊心动魄但没被宿管/老师发现的违纪行为是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-1003","cat":"truth","topic":"school","text":"毕业季离校那天，你记忆最深刻的一个画面或瞬间是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-1004","cat":"truth","topic":"school","text":"你有没有过暗恋隔壁班同学、每天故意经过他们教室门口的经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-school-1005","cat":"truth","topic":"school","text":"上学时你写过最中二、最矫情的一篇网易云评论或QQ空间动态是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0001","cat":"truth","topic":"family","text":"你家有什么外人听起来很奇葩但全家都在遵守的规矩？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0005","cat":"truth","topic":"family","text":"你和兄弟姐妹/堂表亲吵得最凶的一次是因为什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0007","cat":"truth","topic":"family","text":"你觉得自己在性格或生活习惯上最像妈妈的哪一点？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0008","cat":"truth","topic":"family","text":"你觉得自己在性格或脾气上最像爸爸的哪一点？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0013","cat":"truth","topic":"family","text":"父母哪一句平时常说的唠叨，其实你心里觉得最温暖？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0014","cat":"truth","topic":"family","text":"你家里谁最爱唠叨？你一般怎么敷衍应对？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0015","cat":"truth","topic":"family","text":"你爸妈最看不惯你的一个生活习惯是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0017","cat":"truth","topic":"family","text":"家里长辈里谁从小到大最偏心宠爱你？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0020","cat":"truth","topic":"family","text":"过年回家时，哪位亲戚的话最让你头疼？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0021","cat":"truth","topic":"family","text":"你最喜欢或最珍惜的一项家庭传统或节日仪式是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0022","cat":"truth","topic":"family","text":"你爸妈对你最大的一个误解是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0026","cat":"truth","topic":"family","text":"你最想屏蔽或逃离的一句家庭经典唠叨是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0027","cat":"truth","topic":"family","text":"过年过节聚会，你最害怕被亲戚问及什么问题？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0029","cat":"truth","topic":"family","text":"你家庭微信群里发生过最搞笑或奇葩的一件事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0032","cat":"truth","topic":"family","text":"你一直瞒着家里人没坦白的最大秘密是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0035","cat":"truth","topic":"family","text":"你家里保存的关于你最搞笑或最社死的老照片是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-0038","cat":"truth","topic":"family","text":"你面对过最窒息的一次来自家里的催婚/催恋爱套路是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-1001","cat":"truth","topic":"family","text":"你家饭桌上经常出现的哪道菜，凝聚着你对家最深的记忆？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-1002","cat":"truth","topic":"family","text":"你跟父母最近一次心贴心深聊是因为发生了什么事？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-1003","cat":"truth","topic":"family","text":"你第一次拿到工资/奖学金时，给家里买的第一件礼物是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-family-1004","cat":"truth","topic":"family","text":"你父母做过哪件让你突然觉得“他们真的老了”的事？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0001","cat":"truth","topic":"friendship","text":"能让你彻底把对方当成至交好友的关键特质是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0002","cat":"truth","topic":"friendship","text":"你和好朋友之间最尴尬或最社死的一幕回忆是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0004","cat":"truth","topic":"friendship","text":"你和朋友做过最让你感动的一项约定是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0005","cat":"truth","topic":"friendship","text":"朋友为你做过的哪件事最让你感动至今？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0008","cat":"truth","topic":"friendship","text":"你有没有误会过好友并差点断交的经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0010","cat":"truth","topic":"friendship","text":"你和朋友之间最搞笑的一段黑历史是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0011","cat":"truth","topic":"friendship","text":"你朋友圈里谁是公认的搞笑女/沙雕担当？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0015","cat":"truth","topic":"friendship","text":"你朋友里谁最重情重义？举个具体小事？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0018","cat":"truth","topic":"friendship","text":"你为朋友出头做过最热血或最豁出去的事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0020","cat":"truth","topic":"friendship","text":"你认识时间最长的一位十年以上老友是谁？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0022","cat":"truth","topic":"friendship","text":"朋友做出了什么行为会让你觉得有了分寸感上的不适？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0023","cat":"truth","topic":"friendship","text":"你有没有经历过表面客套但私下无交情的“塑料友情”？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0025","cat":"truth","topic":"friendship","text":"你为给朋友撑场子做过最破费或最仗义的事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0030","cat":"truth","topic":"friendship","text":"在座或你身边谁是掌握最多八卦的“情报局长”？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0031","cat":"truth","topic":"friendship","text":"你有没有无意中泄露过好友秘密的内疚经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0032","cat":"truth","topic":"friendship","text":"你有没有默默帮过朋友但从来没告诉过对方的事？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0033","cat":"truth","topic":"friendship","text":"你放过朋友最离谱的一次鸽子是因为什么理由？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-0041","cat":"truth","topic":"friendship","text":"你身边最毒舌但其实刀子嘴豆腐心的人是谁？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-1001","cat":"truth","topic":"friendship","text":"你和好朋友做过最疯、最不计后果的一件事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-1002","cat":"truth","topic":"friendship","text":"当朋友陷入低谷时，你最习惯用什么方式陪伴和安慰对方？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-1003","cat":"truth","topic":"friendship","text":"你有没有某位曾经无比亲密、如今却渐行渐远安静躺在列表里的朋友？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-1004","cat":"truth","topic":"friendship","text":"如果你的好朋友和你讨厌的人 play 得很好，你会介意吗？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-friendship-1005","cat":"truth","topic":"friendship","text":"你曾经借给朋友最长或最难开口要回的一笔钱是多少？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0001","cat":"truth","topic":"love","text":"你相信并能接受网恋/纯纸上谈兵的恋爱吗？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0003","cat":"truth","topic":"love","text":"你收到过最让人印象深刻的一次表白是什么样的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0004","cat":"truth","topic":"love","text":"你觉得长久支撑一段恋爱关系的核心要义是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0008","cat":"truth","topic":"love","text":"为了追一个人，你做过最勇敢或最豁出去的事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0009","cat":"truth","topic":"love","text":"你经历过最心碎或最受打击的一次告白失败经历是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0011","cat":"truth","topic":"love","text":"你最容易对哪种性格/气质的人毫无抵抗力？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0013","cat":"truth","topic":"love","text":"谈恋爱时你最无法忍受对方的某种缺点或行为是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0017","cat":"truth","topic":"love","text":"你听过或经历过最心动的一次告白场景是什么样的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0018","cat":"truth","topic":"love","text":"你脑海中非常具体的理想型伴侣是什么画像？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0021","cat":"truth","topic":"love","text":"恋爱中的你属于高冷独立型，还是超级黏人精？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0022","cat":"truth","topic":"love","text":"你能接受年龄跨度较大的姐弟恋/兄妹恋吗？上限几岁？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0024","cat":"truth","topic":"love","text":"你被分手过吗？当时是怎么走出来的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0025","cat":"truth","topic":"love","text":"你遭遇过感情里的背叛或被绿吗？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0029","cat":"truth","topic":"love","text":"你觉得自己在恋爱中最接地气、最现实的一面是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0030","cat":"truth","topic":"love","text":"你听过最触动心弦的一句情话是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0034","cat":"truth","topic":"love","text":"对于感情，你是追求快节奏上头还是慢热观察型？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0035","cat":"truth","topic":"love","text":"你能接受跨国或跨省的异地恋吗？最多能坚持多久？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0038","cat":"truth","topic":"love","text":"你听到过最油腻、最受不了的一句承诺或情话是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-0042","cat":"truth","topic":"love","text":"在一段亲密关系中，你最享受的相处状态是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-1001","cat":"truth","topic":"love","text":"在感情里，你觉得“情绪价值”和“物质条件”哪个更决定走得长远？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-1002","cat":"truth","topic":"love","text":"你最无法接受伴侣在吵架时采取什么处理态度？（如冷暴力/翻旧账）","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-1003","cat":"truth","topic":"love","text":"哪一个普通的瞬间，会让你突然萌生“想和这个人过一辈子”的念头？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-1004","cat":"truth","topic":"love","text":"你觉得一见钟情靠谱，还是日久生情靠谱？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-love-1005","cat":"truth","topic":"love","text":"在恋爱中你是个占有欲/嫉妒心很强的人吗？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-ex-0001","cat":"truth","topic":"ex","text":"如果收到前任的结婚请帖，你会大方出席还是礼貌封红包不去？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0002","cat":"truth","topic":"ex","text":"你现在的微信黑名单里还有前任的存在吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0003","cat":"truth","topic":"ex","text":"分手后，你还会用小号或隐身偷偷关注前任的社交动态吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0004","cat":"truth","topic":"ex","text":"你家里现在还留着前任送的礼物或纪念品吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0005","cat":"truth","topic":"ex","text":"你上一段感情最终走不下去的核心原因是什么？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0008","cat":"truth","topic":"ex","text":"抛开分手原因，你最怀念前任身上的哪一点优点？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0013","cat":"truth","topic":"ex","text":"如果得知前任有了新欢，你心里是真心祝福还是有点酸？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0016","cat":"truth","topic":"ex","text":"翻看过去，你最想彻底彻底删掉的一段与前任的聊天记录是什么？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0017","cat":"truth","topic":"ex","text":"现在看到前任更新动态，你心里还会泛起涟漪吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0020","cat":"truth","topic":"ex","text":"你曾经做过最像“视奸”前任及其现任社交账号的事情是什么？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0021","cat":"truth","topic":"ex","text":"你对哪一位前任至今依然心存未解的怨气？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0022","cat":"truth","topic":"ex","text":"历任前任里，你最感谢谁带给你的成长？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0024","cat":"truth","topic":"ex","text":"你的手机云相册或隐藏相册里，还有前任的照片吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0027","cat":"truth","topic":"ex","text":"所有前任里，哪一位是你曾经最难放下、耗时最久才走出来的？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0029","cat":"truth","topic":"ex","text":"如果前任深夜突然给你发“在吗”，你会怎么回复？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0030","cat":"truth","topic":"ex","text":"分手之后，你最庆幸自己脱离了前任的什么缺点？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0031","cat":"truth","topic":"ex","text":"对于哪一段过往感情，你至今心里依然觉得留有遗憾？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0034","cat":"truth","topic":"ex","text":"在过去的感情里，你觉得你自己最对不起哪一位前任？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0035","cat":"truth","topic":"ex","text":"你曾经跟前任复合过吗？重来之后结局如何？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0037","cat":"truth","topic":"ex","text":"你和前任分手后，共同朋友圈里的朋友关系变得尴尬吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-0038","cat":"truth","topic":"ex","text":"你现在和哪位前任还保持着普通朋友般的联系？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-1001","cat":"truth","topic":"ex","text":"在过去的所有感情中，你觉得你自己身上最大的恋爱缺点是什么？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-1002","cat":"truth","topic":"ex","text":"如果有一个时光机能让你重回上一段感情的起点，你还会选择开始吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-ex-1003","cat":"truth","topic":"ex","text":"你和前任做过最荒唐或最不理智的一件事是什么？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-secret-0001","cat":"truth","topic":"secret","text":"你手机隐藏相册里最怕被朋友看到的抓拍/黑历史照片是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0004","cat":"truth","topic":"secret","text":"你为了推掉约会或请假，编造过最离谱的谎言是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0005","cat":"truth","topic":"secret","text":"你做过最社死、当场被抓包的尴尬场面是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0006","cat":"truth","topic":"secret","text":"你吹过最离谱、事后想起来无比尴尬的牛皮是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0007","cat":"truth","topic":"secret","text":"你人生中发生过最离谱、最难以启齿的糗事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0008","cat":"truth","topic":"secret","text":"你手机备忘录里写过最中二或最羞耻的一段文字是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0015","cat":"truth","topic":"secret","text":"你做过最冲动、事后想起来觉得自己像个傻子的决定是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0019","cat":"truth","topic":"secret","text":"你隐藏得最深、从不轻易向外人展示的小癖好是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0020","cat":"truth","topic":"secret","text":"你有没有偷偷逃课/旷工去玩，且至今没被发现的经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0021","cat":"truth","topic":"secret","text":"你为了打入某个圈子做过最硬着头皮装熟的事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0023","cat":"truth","topic":"secret","text":"你遇到过最荒唐、像电视剧一样离奇的经历是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0030","cat":"truth","topic":"secret","text":"你做过最逞强但最后惨遭打脸的事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0039","cat":"truth","topic":"secret","text":"你有没有在打游戏/玩牌/考试时偷鸡作弊没被发现的秘密？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-0043","cat":"truth","topic":"secret","text":"你有没有在公开场合当众被表白或当众表白的尴尬记忆？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-1001","cat":"truth","topic":"secret","text":"你微信聊天的“置顶”或者“星标”里，隐藏着什么秘密吗？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-1002","cat":"truth","topic":"secret","text":"你曾经为了掩盖一个尴尬小错误，撒过最环环相扣的谎言是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-1003","cat":"truth","topic":"secret","text":"你在手机上搜索过最奇葩、最怕被别人看到的搜索记录是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-secret-1004","cat":"truth","topic":"secret","text":"你有没有过发朋友圈忘记分组、结果酿成大惨剧的经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0001","cat":"truth","topic":"money","text":"你目前最想入手但因为太贵一直在观望的数码大件是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0002","cat":"truth","topic":"money","text":"你有什么在别人看来非常奇怪或奇葩的花钱小习惯？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0003","cat":"truth","topic":"money","text":"你有没有买熟人推销的东西结果发现被交了智商税的经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0004","cat":"truth","topic":"money","text":"你有坚持记账的习惯吗？最严苛的时候精确到什么地步？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0005","cat":"truth","topic":"money","text":"你用极低的价格淘到过最超值的东西是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0006","cat":"truth","topic":"money","text":"你借给朋友最长或最大的一笔钱是多少？要回来了吗？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0008","cat":"truth","topic":"money","text":"平时生活里，你觉得花在哪方面的钱最让你心疼？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0009","cat":"truth","topic":"money","text":"你最挥霍、花钱大手大脚的一段时间是因为什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0011","cat":"truth","topic":"money","text":"你花钱最毫不吝啬、最心甘情愿的对象是谁？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0017","cat":"truth","topic":"money","text":"你最上头、最剁手的一次冲动消费买了什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0018","cat":"truth","topic":"money","text":"你有什么独特的攒钱小妙招或存钱习惯？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0019","cat":"truth","topic":"money","text":"为了省钱，你做过最省、最抠门的一件事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0021","cat":"truth","topic":"money","text":"你卡里余额最少的时候是多少？当时是怎么度过焦虑的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0022","cat":"truth","topic":"money","text":"你最想体验但因为昂贵一直没舍得尝试的项目是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0026","cat":"truth","topic":"money","text":"你请客吃饭或送礼时，做过最机智的省钱操作是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0035","cat":"truth","topic":"money","text":"买完立刻后悔、至今搁置吃灰的最贵物品是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-0038","cat":"truth","topic":"money","text":"你花过的所有钱里，觉得最物超所值、提升幸福感的一笔支出是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-1001","cat":"truth","topic":"money","text":"如果你突然中了500万彩票，你第一件要干的消费是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-1002","cat":"truth","topic":"money","text":"你买过最令你心疼但又不得不买的高昂日用品是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-money-1003","cat":"truth","topic":"money","text":"如果可以买走现场某位玩家的一个物品/能力，你选什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0001","cat":"truth","topic":"work","text":"你经历过最尴尬、最社死的一次面试回答是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0003","cat":"truth","topic":"work","text":"你合作过最专业、最让人安心的甲方/合作方是什么样的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0004","cat":"truth","topic":"work","text":"工作或学业中出了差错，你有没有尝试过偷偷“甩锅”的经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0005","cat":"truth","topic":"work","text":"你最厌恶、最让你感到内耗的工作环境或工作状态是怎样的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0006","cat":"truth","topic":"work","text":"在截止日期（Due）前最后一刻，你做过最极限的摸鱼划水行为是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0007","cat":"truth","topic":"work","text":"你遇到过最奇葩、最让你想当场离职的老板/领导是什么样的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0011","cat":"truth","topic":"work","text":"你在开会汇报或答辩时，发生过最惨烈的翻车事故是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0012","cat":"truth","topic":"work","text":"你最惊险、原本不被看好但最后完美绝地反击的汇报经历是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0014","cat":"truth","topic":"work","text":"为了通宵赶due/复习，你吃过最硬核的提神神器或做过最疯狂的事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0015","cat":"truth","topic":"work","text":"哪一个具体瞬间让你产生过强烈想“老子不干了”辞职裸辞的念头？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0016","cat":"truth","topic":"work","text":"日常工作中，哪个具体环节能让你找到微小的成就感和享受感？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0018","cat":"truth","topic":"work","text":"你工作或学校里最敬佩、能力最强的一位同辈/同事是谁？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0023","cat":"truth","topic":"work","text":"你在职场或学业上取得过最骄傲、高光时刻成果是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0026","cat":"truth","topic":"work","text":"你在上班/上课期间伪装忙碌、高明摸鱼的技巧是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0031","cat":"truth","topic":"work","text":"在职业规划或选专业上，你最后悔做出的一次选择是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-0037","cat":"truth","topic":"work","text":"如果现在立刻退休且不愁吃穿，你明天开始想干什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-1001","cat":"truth","topic":"work","text":"在职场或学业中，你遇到过最让你叹为观止的“神仙队友”操作是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-1002","cat":"truth","topic":"work","text":"你曾经在工作群/班级群里发送过最惊险、差点撤回不及的错消息是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-work-1003","cat":"truth","topic":"work","text":"你跟同事或同学背地里吐槽领导/老师，结果差点被当事人听到的惊险瞬间？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0001","cat":"truth","topic":"body","text":"你收到过别人关于你衣着穿搭最高级的夸奖是什么？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0002","cat":"truth","topic":"body","text":"你被别人夸奖身材好时，心里真实的感受是什么？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0004","cat":"truth","topic":"body","text":"健身或塑形时，你最想雕刻出来的身体线条是哪里？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0006","cat":"truth","topic":"body","text":"你曾经最感到身材焦虑或外观自卑的部位是哪里？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0008","cat":"truth","topic":"body","text":"你有被别人特意羡慕过皮肤状态或保养秘诀吗？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0009","cat":"truth","topic":"body","text":"你自己非常在意但别人可能根本注意不到的外貌小瑕疵是什么？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0011","cat":"truth","topic":"body","text":"别人夸你的声音/说话语气好听时，你的第一反应是什么？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0012","cat":"truth","topic":"body","text":"全身上下，你个人最满意、觉得最有自信的部位是哪里？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0014","cat":"truth","topic":"body","text":"你有被夸过手好看/手指修长吗？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0019","cat":"truth","topic":"body","text":"如果不考虑预算和风险，你最想微调或医美自己的哪个五官？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0021","cat":"truth","topic":"body","text":"你觉得别人形容你“很有气质”时，主要是指你身上的什么特点？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0022","cat":"truth","topic":"body","text":"为了挽救发际线或增加发量，你暗中试过什么离谱偏方？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-0030","cat":"truth","topic":"body","text":"你有过因为体型/身高被别人当众无心开玩笑而感到不适的经历吗？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-1001","cat":"truth","topic":"body","text":"如果可以任意拥有一个超级名模或运动健将的身材部位，你选哪个？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-body-1002","cat":"truth","topic":"body","text":"你觉得自己穿什么风格或颜色的衣服时颜值最在线？","risk":"mild","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-intimacy-0002","cat":"truth","topic":"intimacy","text":"在暧昧拉扯期，你会选择忍住等待对方，还是主动出击挑明？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0003","cat":"truth","topic":"intimacy","text":"你手机隐藏文件夹里有收藏过令人脸红心跳的私密图片或视频吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0004","cat":"truth","topic":"intimacy","text":"对方做过什么看似无意的举动，瞬间让你浑身酥麻、彻底被撩到？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0005","cat":"truth","topic":"intimacy","text":"你有没有过表面假装云淡风轻，背地里却为暧昧对象的异性互动狂吃醋？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0007","cat":"truth","topic":"intimacy","text":"你有没有在深夜情绪泛滥时，给暧昧对象发过暧昧试探消息？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0009","cat":"truth","topic":"intimacy","text":"你和暧昧对象做过最上头、最心跳加速的肢体接触是什么？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0010","cat":"truth","topic":"intimacy","text":"在亲密互动中，你有尝试过或者期待过某种特定的角色设定吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0014","cat":"truth","topic":"intimacy","text":"在亲密气氛正好的时候，你遇到过最搞笑或最气氛全无的“翻车”瞬间是什么？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0015","cat":"truth","topic":"intimacy","text":"你在亲密关系中有没有某种从没对外人提起过的小偏好？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0017","cat":"truth","topic":"intimacy","text":"最能拉满你欲望和情调的环境氛围是什么样的？（如暗光/香氛/音乐）","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0022","cat":"truth","topic":"intimacy","text":"你心里有没有曾经对身边某个熟人产生过一时冲动的非分之想？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0029","cat":"truth","topic":"intimacy","text":"你有过原本想撩别人，结果反被对方高端操作套牢的经历吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0031","cat":"truth","topic":"intimacy","text":"你对异性说过最让人脸红心跳、杀伤力最大的一句话是什么？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0047","cat":"truth","topic":"intimacy","text":"你做过最隐秘、最让人心痒难耐的一次暧昧试探是什么？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0049","cat":"truth","topic":"intimacy","text":"除了卧室，你觉得最刺激但又有点心虚的亲密地点是哪里？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0054","cat":"truth","topic":"intimacy","text":"你有故意挑起对方情绪后，又装无辜“撩完就跑”的坏心思经历吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-0072","cat":"truth","topic":"intimacy","text":"梦里有没有梦到过和某位明星或虚构角色发生亲密接触？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-1001","cat":"truth","topic":"intimacy","text":"最能瞬间击中你、让你心跳过速的眼神或微表情是什么样的？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-intimacy-1002","cat":"truth","topic":"intimacy","text":"你觉得理想的亲密关系中，拥抱、亲吻和言语表达哪个最不可或缺？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-bodyexp-0002","cat":"truth","topic":"bodyexp","text":"在亲密互动中，你最喜欢对方温柔抚摸你哪个敏感部位？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-bodyexp-0004","cat":"truth","topic":"bodyexp","text":"你愿意和伴侣一起尝试解锁全新的亲密互动体验吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-bodyexp-0007","cat":"truth","topic":"bodyexp","text":"你有过在非常规场所发生过心跳加速的亲密接触体验吗？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-bodyexp-0008","cat":"truth","topic":"bodyexp","text":"除了唇部，你最享受被伴侣亲吻身体的哪个部位？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-bodyexp-0009","cat":"truth","topic":"bodyexp","text":"你印象里最让你浑身过电、鸡皮疙瘩起一整片的一次触碰发生在哪里？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-bodyexp-0011","cat":"truth","topic":"bodyexp","text":"记忆中哪一次拥抱或接触，让你的心跳节奏彻底失控？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-bodyexp-0024","cat":"truth","topic":"bodyexp","text":"你全身上下最防不住、碰一下就会整个人软掉的敏感点在哪里？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-bodyexp-1001","cat":"truth","topic":"bodyexp","text":"在微醺放松的状态下，你更倾向于主动拥抱对方还是被拥抱？","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"truth-role-0002","cat":"truth","topic":"role","text":"如果不限预算和颜值，你最想出哪位游戏角色的Cosplay？","risk":"mild","difficulty":2,"adultOnly":false,"enabled":true},{"id":"truth-role-0004","cat":"truth","topic":"role","text":"如果参加动漫展，你最想cos成哪个动漫角色？","risk":"mild","difficulty":2,"adultOnly":false,"enabled":true},{"id":"truth-role-0005","cat":"truth","topic":"role","text":"如果拍古装写真，你最想体验历史上的哪位风云人物？","risk":"mild","difficulty":2,"adultOnly":false,"enabled":true},{"id":"truth-role-0006","cat":"truth","topic":"role","text":"玩剧本杀或密室时，你经历过最社死或最飙戏的扮演经历是什么？","risk":"mild","difficulty":2,"adultOnly":false,"enabled":true},{"id":"truth-role-0007","cat":"truth","topic":"role","text":"如果穿越到科幻片或赛博朋克世界，你最想扮演什么角色？","risk":"mild","difficulty":2,"adultOnly":false,"enabled":true},{"id":"truth-role-0009","cat":"truth","topic":"role","text":"如果置身金庸武侠世界，你最想当名门正派大侠还是邪派浪子？","risk":"mild","difficulty":2,"adultOnly":false,"enabled":true},{"id":"truth-role-0014","cat":"truth","topic":"role","text":"如果让你去经典电影里演主角，你最想演哪部电影？","risk":"mild","difficulty":2,"adultOnly":false,"enabled":true},{"id":"truth-role-0016","cat":"truth","topic":"role","text":"如果进入职场商战剧，你觉得自己更像腹黑大佬还是热血菜鸟？","risk":"mild","difficulty":2,"adultOnly":false,"enabled":true},{"id":"truth-role-0018","cat":"truth","topic":"role","text":"你玩剧本杀时最喜欢抽到什么设定（如凶手/感情线/反派）？","risk":"mild","difficulty":2,"adultOnly":false,"enabled":true},{"id":"truth-role-1001","cat":"truth","topic":"role","text":"如果可以扮演一天反派大Boss，你最想去完成什么反常动作？","risk":"mild","difficulty":2,"adultOnly":false,"enabled":true},{"id":"truth-dream-0002","cat":"truth","topic":"dream","text":"你觉得自己迄今为止做成过最牛、最值得骄傲的一件事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0003","cat":"truth","topic":"dream","text":"你觉得自己做过最疯狂、最打破常规的事情是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0005","cat":"truth","topic":"dream","text":"如果不考虑金钱和现实限制，你最想实现的个人愿望是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0006","cat":"truth","topic":"dream","text":"你人生中冒过最大、最悬的一场风险/豪赌是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0007","cat":"truth","topic":"dream","text":"回顾过往，你做出过最正确、最骄傲的一个人生决定是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0009","cat":"truth","topic":"dream","text":"你差一点点就实现了，但功亏一篑的遗憾目标是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0010","cat":"truth","topic":"dream","text":"你打死也不想从事的人生职业或行业是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0012","cat":"truth","topic":"dream","text":"你坚持了最多年、从未放弃的一项爱好是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0016","cat":"truth","topic":"dream","text":"你经历过最幸运、最像天赐良机的一件事是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0018","cat":"truth","topic":"dream","text":"让你觉得完全无法适应、最排斥常住的城市类型是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0026","cat":"truth","topic":"dream","text":"十年后，你希望自己处于安稳惬意还是自由探险的生活状态？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0033","cat":"truth","topic":"dream","text":"你过去曾经极度执着，但如今彻底释怀放下的事情是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0034","cat":"truth","topic":"dream","text":"如果可以任意选择，你梦想中定居养老的理想城市是哪里？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-0035","cat":"truth","topic":"dream","text":"你最害怕陷入的糟糕人生状态是什么样的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-dream-1001","cat":"truth","topic":"dream","text":"如果可以立刻获得一项超能力，你希望是隐身、飞天还是读心？为什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0001","cat":"truth","topic":"social","text":"你最喜欢什么形式的派对或聚会氛围？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0004","cat":"truth","topic":"social","text":"酒桌上你最讨厌哪种形式的劝酒或敬酒套路？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0005","cat":"truth","topic":"social","text":"你经历过最尴尬、最想原地消失的相亲或尬聊场合是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0006","cat":"truth","topic":"social","text":"你在朋友圈最常潜水看谁的动态但不点赞？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0009","cat":"truth","topic":"social","text":"你遭遇过最惨烈的一次社交立人设“翻车”现场是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0010","cat":"truth","topic":"social","text":"你最长一次故意已读不回别人信息是因为什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0012","cat":"truth","topic":"social","text":"你找过最离谱但成功的爽约/放鸽子理由是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0016","cat":"truth","topic":"social","text":"电梯里碰到不太熟的邻居或同事，你最怕的寒暄话是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0017","cat":"truth","topic":"social","text":"聚会气氛冷场时，你做过最高情商的救场/圆场操作是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0021","cat":"truth","topic":"social","text":"工作中你最敬而远之、避之不及的同事类型是什么样的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0029","cat":"truth","topic":"social","text":"社交场合中你最难以忍受的虚伪客套是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-0030","cat":"truth","topic":"social","text":"你曾经讲错话或叫错名字导致最社死的一段对话是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-social-1001","cat":"truth","topic":"social","text":"你在社交场合中最喜欢扮演掌控全场的“气氛组”还是安详吃瓜的“背景板”？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0001","cat":"truth","topic":"weakness","text":"你哪一次喝多之后情绪彻底失控破防？发了什么疯？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0002","cat":"truth","topic":"weakness","text":"你觉得自己在性格上最难以克服的一个致命弱点是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0003","cat":"truth","topic":"weakness","text":"你有没有过表面笑嘻嘻说没事，转头自己躲起来哭的经历？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0004","cat":"truth","topic":"weakness","text":"深夜独处时，最容易让你陷入抑郁或焦虑的念头是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0005","cat":"truth","topic":"weakness","text":"近期哪件事或谁的一句话，彻底戳中你痛处让你心理防线崩溃？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0006","cat":"truth","topic":"weakness","text":"你在人际交往中最害怕被别人评价或戳中什么痛点？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0007","cat":"truth","topic":"weakness","text":"你自己都非常讨厌但总是控制不住的坏习惯是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0014","cat":"truth","topic":"weakness","text":"如果评估你自己，你觉得你能力或性格上最大的短板是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0015","cat":"truth","topic":"weakness","text":"你坦然承认的内心最软弱、最需要保护的地方是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0021","cat":"truth","topic":"weakness","text":"在感情或友情中，你是否有过极度害怕被抛弃的焦虑感？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0023","cat":"truth","topic":"weakness","text":"你做过最认怂、最服软的一次决定或瞬间是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-0039","cat":"truth","topic":"weakness","text":"对于具体的某种事物（如高处/昆虫/黑暗），你最深刻的恐惧是什么？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"truth-weakness-1001","cat":"truth","topic":"weakness","text":"哪种性格类型的人，是你接触下来觉得最难沟通、最拿他没办法的？","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"deeptalk-life-0001","cat":"deeptalk","topic":"life","text":"多年以后，你希望朋友们以怎样的词汇或印象记住你？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0003","cat":"deeptalk","topic":"life","text":"摔过很多跤之后，你现在最深信不疑的人生道理是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0006","cat":"deeptalk","topic":"life","text":"你上一次感到灵魂无比清醒透彻的独处时刻是在什么时候？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0007","cat":"deeptalk","topic":"life","text":"如果医生告知你生命只剩最后一个月，你清单上的前三件事是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0009","cat":"deeptalk","topic":"life","text":"遭遇了哪件事之后，你曾经坚守的人生价值观发生了剧烈动摇？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0010","cat":"deeptalk","topic":"life","text":"过去你曾奉为圭臬、如今却深深怀疑的一句鸡汤信条是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0013","cat":"deeptalk","topic":"life","text":"你感受过最强烈的“人生毫无意义”的虚无感是在什么时候？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0015","cat":"deeptalk","topic":"life","text":"剔除掉社会的期望，你个人赋予自己活着的本质价值是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-1001","cat":"deeptalk","topic":"life","text":"在你看来，“成功的人生”是用内心充实衡量的，还是用外部成就衡量的？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0001","cat":"deeptalk","topic":"fear","text":"你压在潜意识最深处、从不敢对外公开的内心恐惧是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0003","cat":"deeptalk","topic":"fear","text":"你最勇敢地正面硬刚、并成功跨越的一次恐惧经历是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0006","cat":"deeptalk","topic":"fear","text":"那种说不清道不明、突然袭来的莫名的不安感，通常源自什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0007","cat":"deeptalk","topic":"fear","text":"失眠的深夜里，你对不可预测的未来产生的最大焦虑是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0010","cat":"deeptalk","topic":"fear","text":"面对某种无法承受的后果时，你采取过最严重的逃避手段是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0015","cat":"deeptalk","topic":"fear","text":"如果现实逼迫你放弃，你最不敢想象自己失去的人或事物是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-1001","cat":"deeptalk","topic":"fear","text":"当你感到前所未有的迷茫时，你通常依靠什么力量重新站起来？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0001","cat":"deeptalk","topic":"relation","text":"你目前生命中最难厘清、最让你感到困惑疲惫的一段关系是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0003","cat":"deeptalk","topic":"relation","text":"你和父母之间存在但一直说不出口的心理隔阂是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0004","cat":"deeptalk","topic":"relation","text":"你和最要好的朋友之间，最难坦诚相告的一句真心话是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0006","cat":"deeptalk","topic":"relation","text":"在过往的人际交往中，你觉得自己辜负过谁的一片深情或信任？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0007","cat":"deeptalk","topic":"relation","text":"你理想中彻底无条件信任、毫无保留的深度关系是什么样的？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0011","cat":"deeptalk","topic":"relation","text":"因为自己的任性或疏忽，你亲手搞砸过最遗憾的一段关系是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0015","cat":"deeptalk","topic":"relation","text":"你是否曾因为自己的冷漠或退缩，伤透了一个关心你的人？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-1001","cat":"deeptalk","topic":"relation","text":"你觉得长久稳定的人际关系，本质上是靠“吸引”还是靠“维系”？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0001","cat":"deeptalk","topic":"self","text":"别人常用来形容你、但你自己内心极度否认或抗拒的特质是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0002","cat":"deeptalk","topic":"self","text":"你隐藏在社交面具之下、但自己其实非常喜欢的隐秘一面是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0004","cat":"deeptalk","topic":"self","text":"为了维持某种形象或妥协现实，你做过最违背内心的自欺欺人是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0006","cat":"deeptalk","topic":"self","text":"在某个特定瞬间，连你自己都感到无比陌生的那个阴暗/冷酷的自己是什么样的？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0010","cat":"deeptalk","topic":"self","text":"如果给你一次机会抹去过往的一段经历，你最想重写哪段历史？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0011","cat":"deeptalk","topic":"self","text":"抛开身份标签，你觉得你真正看清并接纳真实的自己了吗？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-1001","cat":"deeptalk","topic":"self","text":"如果用三个关键词来总结你灵魂的核心内核，会是哪三个词？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0001","cat":"deeptalk","topic":"regret","text":"时光流逝这么久，至今依然横在你心头未曾平息的一件事是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0003","cat":"deeptalk","topic":"regret","text":"你心中是否有过一位觉得深深亏欠、但再无机会亲口说抱歉的人？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0005","cat":"deeptalk","topic":"regret","text":"对于曾经犯下的某个过错，你最终选择放过自己并实现和解了吗？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0006","cat":"deeptalk","topic":"regret","text":"因为当时的怯懦或犹豫，你错过的最令人惋惜的机会是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0012","cat":"deeptalk","topic":"regret","text":"如果时光倒流回三年前，你做出改变的第一个决定会是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-1001","cat":"deeptalk","topic":"regret","text":"你觉得人生的遗憾更多是因为“做错了”还是因为“没去做”？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0001","cat":"deeptalk","topic":"value","text":"在现实利益与内心情感之间，你做过最违背原则但无可奈何的取舍是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0002","cat":"deeptalk","topic":"value","text":"你愿意为了无拘无束的个人自由，去放弃世俗意义上的安稳生活吗？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0003","cat":"deeptalk","topic":"value","text":"随着年龄增长，你曾经坚守的哪条道德/做事底线被你重新退让定义了？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0007","cat":"deeptalk","topic":"value","text":"你愿意为了追求极致的职业梦想，去牺牲当下的舒适区与人际陪伴吗？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0010","cat":"deeptalk","topic":"value","text":"如果只能挑选一项作为人生基石，你最看重的品质是什么？（如诚实/勇敢/善良）","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0011","cat":"deeptalk","topic":"value","text":"在你目前的人生阶段，你面临过最拉扯、最矛盾的一次双选题是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-1001","cat":"deeptalk","topic":"value","text":"在追求效率的时代里，你坚守的最“不实用”但温暖的价值观是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0001","cat":"deeptalk","topic":"future","text":"在你想象的终极人生蓝图中，你最憧憬的大结局画面是什么样的？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0003","cat":"deeptalk","topic":"future","text":"你理想中理想的未来五年，生活状态与精神面貌应该是怎样的？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0005","cat":"deeptalk","topic":"future","text":"当生命走到终点回顾一生时，你希望自己能庆幸当年做对了什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0006","cat":"deeptalk","topic":"future","text":"当你老了优雅地坐在摇椅上，你希望自己以怎样的心态面对岁月？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0013","cat":"deeptalk","topic":"future","text":"面对容颜衰老和身体机能退化，你有过真实的年龄恐惧感吗？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-1001","cat":"deeptalk","topic":"future","text":"你希望未来的自己能够拥有一份怎样的心境去面对未知？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0101","cat":"deeptalk","topic":"life","text":"如果可以给十年前的自己寄去一封信，你最想写下的三个词是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0102","cat":"deeptalk","topic":"life","text":"你觉得一个人真正走向成熟的标志事件或心态转变是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0103","cat":"deeptalk","topic":"life","text":"你心目中理想的“自由”生活状态，具体长什么样？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0104","cat":"deeptalk","topic":"life","text":"在你生命中最黑暗或艰难的时期，是什么支撑你熬过来的？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0105","cat":"deeptalk","topic":"life","text":"如果把目前的人生拍成一部电影，你觉得现在的剧情进行到了什么章节？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0106","cat":"deeptalk","topic":"life","text":"你认为人的一生中，陪伴、成就和自我体验三者该怎么排序？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0107","cat":"deeptalk","topic":"life","text":"有哪些事是你坚持做了很久之后，才发现它深刻改变了你的？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-life-0108","cat":"deeptalk","topic":"life","text":"如果明天所有现实压力都消失，你最想投入去干的一件事是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0101","cat":"deeptalk","topic":"fear","text":"在面对重大人生选择时，最容易让你陷入犹豫不决的原因是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0102","cat":"deeptalk","topic":"fear","text":"你是否曾经很害怕被身边的人看穿真实的自己？为什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0103","cat":"deeptalk","topic":"fear","text":"面对不可控的变化时，你习惯用什么方式建立安全感？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0104","cat":"deeptalk","topic":"fear","text":"你觉得自己在人际关系中最大的不安全感来源于什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0105","cat":"deeptalk","topic":"fear","text":"如果有一天必须独自一人生活在陌生的环境，你最担心的是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0106","cat":"deeptalk","topic":"fear","text":"社会或长辈赋予你的哪种期待，曾让你感到最沉重的压迫感？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-fear-0107","cat":"deeptalk","topic":"fear","text":"你最害怕失去的一项品质或内心感受是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0101","cat":"deeptalk","topic":"relation","text":"你觉得能够维持一段终生好友关系的底线原则是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0102","cat":"deeptalk","topic":"relation","text":"当关系出现裂痕时，你通常是主动沟通解决，还是冷处理顺其自然？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0103","cat":"deeptalk","topic":"relation","text":"在所有社交关系中，你觉得最让你感到轻松舒适的状态是怎样的？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0104","cat":"deeptalk","topic":"relation","text":"你有没有过某段时间非常渴望独处、甚至想切断所有社交连接？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0105","cat":"deeptalk","topic":"relation","text":"在沟通中，哪种表达方式最容易让你彻底闭上心门拒绝交流？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0106","cat":"deeptalk","topic":"relation","text":"你觉得家人、朋友和伴侣，各自在你生命中扮演的最不可替代的角色是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-relation-0107","cat":"deeptalk","topic":"relation","text":"你曾从一位重要的人身上学到的最深刻的人生功课是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0101","cat":"deeptalk","topic":"self","text":"如果可以把自己身上的某种性格特点放大10倍，你希望是哪种？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0102","cat":"deeptalk","topic":"self","text":"你觉得当下的自己，和三年前相比最大的心态进步是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0103","cat":"deeptalk","topic":"self","text":"你在什么时候最容易对自我产生怀疑？当时又是怎么调整过来的？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0104","cat":"deeptalk","topic":"self","text":"你认为自己最独特、最不随波逐流的一面体现在哪里？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0105","cat":"deeptalk","topic":"self","text":"如果在别人眼里你是个情绪稳定的人，你内心的真实波澜通常是什么样？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0106","cat":"deeptalk","topic":"self","text":"你最希望自己具备但目前还在努力培养的一种心态是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-self-0107","cat":"deeptalk","topic":"self","text":"你最享受独处时做的哪件事？它带给你怎样的内心体验？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0101","cat":"deeptalk","topic":"regret","text":"你人生中感到最遗憾但已经无法弥补的一件事是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0102","cat":"deeptalk","topic":"regret","text":"有没有哪一句当时没说出口的话，至今还在你脑海里回响？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0103","cat":"deeptalk","topic":"regret","text":"你觉得自己在成长过程中，付出代价最大的一个误区或执念是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0104","cat":"deeptalk","topic":"regret","text":"如果可以重新选择一次过去人生的某个岔路口，你会换个方向吗？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0105","cat":"deeptalk","topic":"regret","text":"因为年少轻狂或不成熟，你曾经做过最后悔的一件决定是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0106","cat":"deeptalk","topic":"regret","text":"你觉得遗憾和痛苦，给你的性格成长留下了什么正面的印记？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-regret-0107","cat":"deeptalk","topic":"regret","text":"有没有哪段渐行渐远的关系，是你至今想起依然感到唏嘘的？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0101","cat":"deeptalk","topic":"value","text":"你认为在工作中，“兴趣激情”和“稳定高报酬”哪个更决定长久幸福感？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0102","cat":"deeptalk","topic":"value","text":"在人生的这个阶段，你觉得什么样的事情才值得你投入宝贵的心力？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0103","cat":"deeptalk","topic":"value","text":"你对“成功”的定义，相比几年前发生了怎样具体的改变？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0104","cat":"deeptalk","topic":"value","text":"你如何看待“顺其自然”和“全力争取”这两种生活态度？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0105","cat":"deeptalk","topic":"value","text":"你最排斥社会大众流行推崇的哪种生活哲学或处世观念？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0106","cat":"deeptalk","topic":"value","text":"如果必须在“绝对真诚”和“照顾他人情绪”之间选一个，你倾向选哪个？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-value-0107","cat":"deeptalk","topic":"value","text":"在你看重的诸多品质里，哪一种是你挑选深交朋友的必要条件？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0101","cat":"deeptalk","topic":"future","text":"你最期待自己在未来3到5年内实现的一个突破是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0102","cat":"deeptalk","topic":"future","text":"在你理想的晚年生活图景里，最不可或缺的元素是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0103","cat":"deeptalk","topic":"future","text":"面对不确定性越来越强的未来，你做过哪些心理或现实准备？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0104","cat":"deeptalk","topic":"future","text":"如果你可以在未来的某个时刻给当下的自己发一条提醒，你觉得会是什么？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0105","cat":"deeptalk","topic":"future","text":"你希望未来5年后的自己，能够拥有怎样的生活节奏？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0106","cat":"deeptalk","topic":"future","text":"如果有机会去体验一种完全不同的人生轨迹，你最想试试哪种？","risk":"safe","difficulty":2,"enabled":true},{"id":"deeptalk-future-0107","cat":"deeptalk","topic":"future","text":"当你回忆今晚的聚会时，你希望未来的自己记住今晚的什么感觉？","risk":"safe","difficulty":2,"enabled":true},{"id":"dare-c0-0001","cat":"dare","text":"用浓郁的家乡方言腔调，感情澎湃地播报你今晚吃过的菜品名","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0003","cat":"dare","text":"配上一张搞怪自拍，把当下的真实心情发一条朋友圈并保留一小时","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0005","cat":"dare","text":"用严肃的新闻主播腔调，一本正经地朗读桌上的菜单或饮料成分表","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0006","cat":"dare","text":"用即兴Rap的节奏和动作，对着正对面的玩家单膝下跪说“我真的太崇拜你了”","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0007","cat":"dare","text":"用最反差的夹子音/粗犷音，激情唱出某首热门神曲的副歌两句","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0009","cat":"dare","text":"以现场随机三个物品为要素，30秒内即兴编造一个反转搞笑的小故事","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0010","cat":"dare","text":"做出一张全场公认最挤眉弄眼的鬼脸造型，保持5秒接受大家拍照","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0011","cat":"dare","text":"站起来充满活力地连续完成15个开合跳，并大声数出来","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0012","cat":"dare","text":"用软萌的奶音撒娇语气，播报全场明天的天气预报","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0014","cat":"dare","text":"当场做10个标准俯卧撑（做不到的可用标准平板支撑20秒代替）","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0017","cat":"dare","text":"用唐僧式啰嗦无比的语调，向全场念一段纸巾/饮料包装袋上的说明文","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0018","cat":"dare","text":"把一句极为过气的土味情话更新到微信状态或社交账号上","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0019","cat":"dare","text":"头顶一个水杯或水果，保持平衡走完一圈且不能掉落","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0020","cat":"dare","text":"做出中二奥特曼发光姿势或超人起飞Pose，定格15秒接受大家检阅","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0021","cat":"dare","text":"模仿企鹅摇摇晃晃走路的样子，在场地中央来回走15秒","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0023","cat":"dare","text":"给微信最近联系人列表第一位好友发送：“其实我一直暗恋你”，3秒后撤回","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0024","cat":"dare","text":"给各位表演一曲汽车摇（很简单的！来吧！）","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0036","cat":"dare","text":"打开你的音乐App，将“历史播放记录”第一页当众展示给全场看","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0037","cat":"dare","text":"讲一个全场没人听过的地道冷笑话，如果没人笑你自己罚一口","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0038","cat":"dare","text":"用霸道总裁沉声道：“女人，你在玩火”的油腻语气说一句全场台词","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0049","cat":"dare","text":"模仿名媛/豪门贵妇翘着小拇指走路拿酒杯的姿态摇曳10秒","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0054","cat":"dare","text":"横着身子模仿横行霸道的螃蟹，边走边吐气10秒","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0056","cat":"dare","text":"用浮夸的舞台剧/戏精戏剧腔，向全场做自我介绍30秒","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-1001","cat":"dare","text":"用最深情的语气，对着一只水杯或者一把椅子朗诵一段情话","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-1002","cat":"dare","text":"当场模仿一种小动物（如猫咪叫/小狗伸懒腰）并坚持20秒","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0001","cat":"dare","text":"面向左边第一位玩家，两人大方击掌并保持手掌贴合15秒","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0002","cat":"dare","text":"轻轻靠在右边玩家的肩膀上，静止保持一分钟","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0005","cat":"dare","text":"给身边最靠近你的玩家一个真诚而温暖的拥抱","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0007","cat":"dare","text":"拉起左边玩家的手，轻轻摇晃并撒娇说“带我玩嘛”","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0008","cat":"dare","text":"伸出手向右边玩家做一个中世纪欧式优雅的礼节性握手","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0010","cat":"dare","text":"和右边玩家十指相扣，保持双手交缠20秒","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0012","cat":"dare","text":"牵着右边玩家的手，像跳芭蕾一样拉着对方原地转一圈","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0014","cat":"dare","text":"牵起右边玩家的手并高高举起，像胜利者一样大喊“我们是冠军”","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0016","cat":"dare","text":"和左边玩家鼻尖贴鼻尖近距离对视10秒，期间谁先笑谁罚酒","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0017","cat":"dare","text":"和右边玩家脸颊轻轻贴在一起，合影一张记录此刻","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0019","cat":"dare","text":"为左边玩家提供10秒捏肩放松按摩服务","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0020","cat":"dare","text":"张开双臂，给右边的玩家一个极其热烈的熊抱","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0021","cat":"dare","text":"握住对面玩家的手掌，用手指为其按摩手掌穴位10秒","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0023","cat":"dare","text":"与左边玩家深情对视10秒，全程不许眨眼不许笑","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0034","cat":"dare","text":"挽着左边玩家的手臂，像老姐妹/好哥们一样保持到下一轮","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-1001","cat":"dare","text":"与全场每位玩家依次轻柔碰拳，并说一句专属的夸奖","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0001","cat":"dare","text":"亲手拿一块食物/水果，亲切地喂给左边玩家吃一口","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0002","cat":"dare","text":"坐在左边玩家的大腿上，保持姿势5秒钟","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0003","cat":"dare","text":"闭上眼睛，由右边玩家拿起一块食物喂进你嘴里","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0004","cat":"dare","text":"尝试将左边的玩家公主抱起来（双脚离地即可），保持3秒","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0005","cat":"dare","text":"与左边玩家额头贴着额头，感受彼此呼吸10秒","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0006","cat":"dare","text":"和左边玩家背靠背双手紧锁，相互支撑保持10秒","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0007","cat":"dare","text":"搂住右边玩家的腰部，两人同步原地转一个华尔兹圈","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0013","cat":"dare","text":"温柔地帮对面玩家整理一下衣服领子或头发","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0020","cat":"dare","text":"蒙上眼睛，由左边玩家小心翼翼地喂你喝一口饮料/酒","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-1001","cat":"dare","text":"由你右边的玩家为你设计一个发型/造型，保持到下一轮","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c3-0001","cat":"dare","text":"在全场见证下，与右边自愿的玩家浪漫热吻5秒","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0002","cat":"dare","text":"凑到右边玩家耳边，用极具诱惑力的低音炮耳语一句私密情话","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0006","cat":"dare","text":"与左边玩家互换身上的外衣/外套，并穿着完成下一轮游戏","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0008","cat":"dare","text":"靠近右边玩家耳根处轻轻吹一口气，直到对方耳朵发红","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0012","cat":"dare","text":"在右边玩家的脸颊上留下一个清晰的唇印吻痕","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0018","cat":"dare","text":"把左边玩家拉到角落，贴着对方耳朵咬耳朵密语10秒","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0023","cat":"dare","text":"与左边玩家互换一件身上的饰品（戒指/项链/手链）戴上","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-1001","cat":"dare","text":"与左边玩家靠近到距离不足5厘米，维持5秒呼吸交融不许避开","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-stranger-0001","cat":"dare","text":"走向附近一位路人，礼貌而自信地大方索要联系方式","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0002","cat":"dare","text":"面向服务员或店员，大方比个赞并微笑说：“今天辛苦啦，加油！”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0003","cat":"dare","text":"找一位路过的陌生人，礼貌请对方帮你和朋友拍一张合影","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0006","cat":"dare","text":"走到隔壁桌面前，真诚微笑地对其中一位说：“打扰啦，你今天穿搭真好看！”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0008","cat":"dare","text":"路过一位陌生人时，一本正经地对他说一句无害的土味情话","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0009","cat":"dare","text":"礼貌询问附近一位路人，能否一起拍张搞笑双人合影","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0014","cat":"dare","text":"去吧台或隔壁桌，请一位陌生人帮你推荐一款他最喜欢的饮品","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0017","cat":"dare","text":"向一位路过的陌生人远距离送出一个优雅而幽默的飞吻","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0021","cat":"dare","text":"走过去对隔壁桌的朋友说：“祝你们今天好运满满，用餐愉快！”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-1001","cat":"dare","text":"礼貌向附近一位路人询问时间，并在离开前夸赞一句对方今天很精神","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-basic-0001","cat":"drink","text":"举杯向大家致意，然后独自痛快抿一大口！","who":"self","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-basic-0002","cat":"drink","text":"豪气干云，直接喝掉杯里剩下的半杯酒！","who":"self","amount":"half-glass","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-basic-0004","cat":"drink","text":"举起酒杯大喊一声“敬今晚美好的相聚！”，抿一口","who":"self","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-basic-0010","cat":"drink","text":"主动站起来，和在座的每一位玩家依次碰杯并各喝一口","who":"self","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-basic-0012","cat":"drink","text":"高举酒杯大喊：“为伟大的友谊干杯！”，畅饮一口","who":"self","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-basic-0017","cat":"drink","text":"举高杯子原地优雅地转一圈，随后抿一口酒","who":"self","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-basic-1001","cat":"drink","text":"站起来举杯，向今晚所有的快乐瞬间致敬，一口干掉！","who":"self","amount":"glass","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-chug-0001","cat":"drink","text":"手气不佳，自觉罚一口/整杯！","who":"self","amount":"glass","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-chug-0003","cat":"drink","text":"展示海量！一口气将杯中酒水一饮而尽！","who":"self","amount":"chug","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-chug-0005","cat":"drink","text":"霸气拿起酒瓶/饮料瓶，直接对瓶吹三大口！","who":"self","amount":"bottle","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-chug-1001","cat":"drink","text":"化身酒神，干掉这杯并向大家展示空杯底！","who":"self","amount":"chug","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-others-0001","cat":"drink","text":"指定现场手气最差或者今天最迟到的人喝一杯","who":"choose","amount":"glass","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-others-0002","cat":"drink","text":"点名左边的玩家作为你的“陪酒小护卫”，陪你干一杯","who":"choose","amount":"glass","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-others-0005","cat":"drink","text":"由你选出全场你觉得今晚最靓/最帅的人，请对方喝半杯","who":"choose","amount":"half-glass","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-others-1001","cat":"drink","text":"指定现场目前手机电量最低的人，惩罚喝半杯","who":"choose","amount":"half-glass","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-chain-0002","cat":"drink","text":"发起“逛三园”或“成语接龙”，第一个出错的人罚酒一口","who":"loser","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-chain-0004","cat":"drink","text":"与左右两侧的玩家分别碰杯，顺时针轮流各喝一口","who":"group","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-chain-1001","cat":"drink","text":"全场举杯进行一次默契大碰撞，每个人抿一口","who":"all","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-combo-0001","cat":"drink","text":"先干掉半杯酒，然后抽选并回答一道真心话题目","who":"self","amount":"half-glass","combo":"truth","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-combo-0002","cat":"drink","text":"一边喝酒，一边当场分享一件你最近发生的搞笑糗事","who":"self","amount":"sip","combo":"story","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-combo-0010","cat":"drink","text":"豪爽干杯，同时挑选现场一位玩家为你指定一项大冒险","who":"self","amount":"glass","combo":"dare","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-combo-1001","cat":"drink","text":"干掉这杯，并现场对你左边的玩家说一句最走心的夸赞","who":"self","amount":"glass","combo":"compliment","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-fun-0001","cat":"drink","text":"闭上眼睛盲摸酒杯，摸到了就闭眼喝掉半杯","who":"self","amount":"half-glass","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-fun-0002","cat":"drink","text":"用吸管优雅地喝完半杯饮料/酒","who":"self","amount":"half-glass","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-fun-0003","cat":"drink","text":"和左边玩家玩划拳/剪刀石头布，输的人喝两口","who":"loser","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-fun-0006","cat":"drink","text":"全过程只能用非惯用手（左手/右手）端杯喝酒","who":"self","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-fun-0009","cat":"drink","text":"反手绕过脖子（交杯酒姿势给自己）喝完这一口","who":"self","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"drink-fun-1001","cat":"drink","text":"用手捂住眼睛，在别人的指挥下准确拿到杯子并抿一口","who":"self","amount":"sip","combo":"","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0101","cat":"dare","text":"用极度沉痛的语气，给全场朗读你手机里最新收到的垃圾广告短信或验证码","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0102","cat":"dare","text":"现场模仿三款经典微信表情包（如破防笑哭、狗头保命、捂脸），每个保持5秒","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0103","cat":"dare","text":"假装自己是一个AI智能语音助手，用机械音回答现场玩家对你提问的3个问题","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0104","cat":"dare","text":"把自己的微信昵称临时改成“今晚的氛围担当”，直到游戏结束","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0105","cat":"dare","text":"用浮夸的带货主播腔调（“家人们把不贵打在公屏上！”）推销你身上的某件物品30秒","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0106","cat":"dare","text":"在场地中央展示一段无实物表演（如假装在下大雨中打伞/假装在极寒中吃热火锅）","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0107","cat":"dare","text":"用咆哮帝或琼瑶剧的夸张语气，说出：“你冷酷，你无情，你不理智！”","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0108","cat":"dare","text":"拍下一张当下自己的搞怪表情，设为自己手机锁屏壁纸直到聚会结束","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0109","cat":"dare","text":"模仿一段经典奥斯卡获奖感言，眼含热泪地感谢在座的各位“老铁”","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0110","cat":"dare","text":"展示你手机里最久远的一张未删除的照片，并讲讲当时的故事","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0111","cat":"dare","text":"用假音唱出《卡路里》或者《燃烧我的卡路里》最灵魂的那一句","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0112","cat":"dare","text":"模仿霸道总裁吃泡面/喝白开水的无敌酷炫拽姿态","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0113","cat":"dare","text":"用美声唱法朗诵一段“清明时节雨纷纷，路上行人欲断魂”","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0114","cat":"dare","text":"做10个极其标准且带响声的拍手跳（Burpee跳或开合跳）","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0115","cat":"dare","text":"用超级嗲的夹子音讲一个30秒的脑筋急转弯","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0116","cat":"dare","text":"现场模仿三位在座玩家的标志性动作或口头禅","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0117","cat":"dare","text":"用慢动作（0.5倍速）展示你喝下一口饮料的全过程","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0118","cat":"dare","text":"在不借助手的情况下，仅凭面部肌肉将放在额头上的薯片/饼干吃到嘴里","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0119","cat":"dare","text":"闭上眼睛，单脚站立并双手张开保持20秒不倒","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0120","cat":"dare","text":"用深情的电台主播音广播：“感谢大家收听今晚的深夜心事，我是……”，并播报一段正能量语录","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0121","cat":"dare","text":"用大张伟式的狂热台风唱出两句流行金曲","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0122","cat":"dare","text":"现场展示你的手机屏屏幕使用时间（Screen Time），看看今天和本周哪个App用得最多","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0123","cat":"dare","text":"在社交软件上发一条“其实我是一名隐世的武林高手”状态，保持30分钟","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0124","cat":"dare","text":"用老牌港片配音腔说出：“阿sir，给我一个机会，我以前没得选！”","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0125","cat":"dare","text":"现场做一段T台模特走秀，并以极具冲击力的Pose定格结束","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0126","cat":"dare","text":"用充满悬疑感的纪录片旁白腔，解说现场某位正在吃东西或喝水的玩家","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0127","cat":"dare","text":"现场展示一个你隐藏的最没用但又搞笑的小特长（如动耳朵/翻眼皮/舌头舔鼻尖）","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0128","cat":"dare","text":"把自己手机里最喜欢的一首电音/摇滚曲目放出来，并跟着打节拍疯狂摇头5秒","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0129","cat":"dare","text":"把你的手机字体大小临时调成特大号/老年代步字号，保持两轮","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0130","cat":"dare","text":"用充满干劲的健身教练语气大喊：“来！最后三秒！坚持住！胜利属于我们！”","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0131","cat":"dare","text":"做出一个超级英雄落地（Superhero Landing）的经典半跪姿势并接受大家欢呼","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0132","cat":"dare","text":"用最正宗的译制片译制腔说：“哦我的上帝啊，瞧瞧这可爱的酒杯，我发誓要把它喝干！”","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0133","cat":"dare","text":"把纸巾垫在头上当成帽子，戴着它继续玩游戏直到下一轮结束","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0134","cat":"dare","text":"用最优雅的西餐礼仪去拿一块小零食，并用无比挑剔的美食家口吻做出点评","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c0-0135","cat":"dare","text":"模仿一段老电视广告词（如“今年过节不收礼”），语气要充满情怀","contact":0,"stranger":false,"target":"self","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0101","cat":"dare","text":"与你右边的玩家比拼一次手力掰手腕，输的人罚饮一口","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0102","cat":"dare","text":"和左边的玩家眼神死锁对视15秒，期间双方都必须保持迷之微笑","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0103","cat":"dare","text":"向全场指定一位玩家，真诚说出对方身上最吸引你的3个优点","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0104","cat":"dare","text":"与左边的玩家合体做出一半爱心手势，拍照留念","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0105","cat":"dare","text":"轻轻给右边的玩家锤背/捏肩20秒，询问对方服务满意度","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0106","cat":"dare","text":"握住对面玩家的手，用看手相的口吻为对方测算“今晚的财运和桃花”","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0107","cat":"dare","text":"和左边玩家同步做一次“剪刀石头布”，连玩三把，输的喝一口","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0108","cat":"dare","text":"与右边玩家勾小指起誓：“今爱你一万年！”","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0109","cat":"dare","text":"给左边玩家唱一段定制生日歌（不管今天是不是他生日）","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0110","cat":"dare","text":"拉着右边玩家的手，深情演唱《十年》或《朋友》的前两句","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0111","cat":"dare","text":"和全场每一位玩家依次进行一次充满仪式感的High Five","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0112","cat":"dare","text":"与左边玩家互换手机屏保为对方的自拍，直到游戏结束","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0113","cat":"dare","text":"用深情凝视的目光看着右边玩家，直到对方忍不住笑场","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0114","cat":"dare","text":"与左边玩家玩一次“拇指打架”游戏，三局两胜","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0115","cat":"dare","text":"向坐在你正对面的玩家做一个超可爱的猫咪击爪动作","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0116","cat":"dare","text":"给右边的玩家设计一个专属的酷炫手势（Secret Handshake）并现场表演一次","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0118","cat":"dare","text":"把头轻轻靠在右边玩家的背上5秒，并说“有你在真好”","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0119","cat":"dare","text":"握住左边玩家的手腕，假装为其把脉并给出搞笑的“诊断建议”","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0120","cat":"dare","text":"与右边玩家互夸3个回合，夸得越离谱越好","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0121","cat":"dare","text":"和对面玩家互换杯子喝一口（如不习惯可仅碰杯致意）","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0122","cat":"dare","text":"双手托腮，眼睛闪烁着光芒看着左边玩家15秒","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0123","cat":"dare","text":"和右边玩家用脚尖轻碰一下，算作“江湖帮派暗号确认”","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0124","cat":"dare","text":"向左边的玩家借一件小物品（如戒指/手链），戴在自己身上直到下一轮","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0125","cat":"dare","text":"与右边玩家面对面站立，模仿对方的动作做“镜子游戏”10秒","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0126","cat":"dare","text":"给对面玩家递上一张纸巾，并附赠一个优雅的绅士/淑女弯腰礼","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0127","cat":"dare","text":"和左边玩家比谁能更快眨眼10次，输的罚半杯","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0128","cat":"dare","text":"牵着右边玩家的手，用极其庄严的语气说：“全宇宙最棒的队友非你莫属！”","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0129","cat":"dare","text":"与左边玩家靠在一起，用手机拍一张“大脸搞怪特效”合影","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c1-0130","cat":"dare","text":"给右边玩家起一个今晚专属的萌萌哒绰号，并全程这么叫他/她","contact":1,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0101","cat":"dare","text":"用手轻轻抚摸一下右边玩家的头发，并夸赞一句“发质真好”","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0102","cat":"dare","text":"和左边的玩家背靠背坐着或站着，互相用力支撑保持15秒","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0103","cat":"dare","text":"闭上眼睛，由右边的玩家拿一块水果/纸巾碰你的脸，你猜碰的是哪里","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0104","cat":"dare","text":"给左边玩家做一个精致的发型造型（可以用发夹或皮筋）","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0105","cat":"dare","text":"与右边玩家双手紧扣，一起完成3个双人同步深蹲","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0106","cat":"dare","text":"由左边玩家扶着你的手臂，你做一次优雅的芭蕾舞跳跃/谢幕礼","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0107","cat":"dare","text":"给右边的玩家喂一口现场的下酒菜或零食，并温柔地说“张嘴~”","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0108","cat":"dare","text":"与左边玩家拥抱并悬空抱起对方转一圈（若抱不动可改为背起转一圈）","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0109","cat":"dare","text":"坐在右边玩家身旁，轻轻帮对方理一理领口或袖口","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0110","cat":"dare","text":"与左边玩家手牵手，像走红毯一样在场地里巡游一圈","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0111","cat":"dare","text":"由右边玩家拿起水杯，贴心地喂你喝一口水/酒","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0112","cat":"dare","text":"和左边玩家来一个极具默契的体育明星式撞胸/撞肩庆祝","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0113","cat":"dare","text":"双手托起右边玩家的手掌，认真夸赞对方的手型30秒","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0114","cat":"dare","text":"让左边的玩家在你手臂上用马克笔/水笔画一个小图案（如小爱心）","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0115","cat":"dare","text":"与右边玩家双人合力用两根吸管将一个零食夹起来放到盘子里","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0116","cat":"dare","text":"把头靠在左边玩家的大腿上（或膝盖上）保持到下局结束","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0117","cat":"dare","text":"与右边玩家配合，两人各用一只手合力为你倒一杯酒","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0118","cat":"dare","text":"给左边的玩家一个持续10秒的超长温暖拥抱","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0119","cat":"dare","text":"与右边玩家并肩而坐，用手臂勾住对方的手臂（挽手姿势）保持一轮","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0120","cat":"dare","text":"让左边玩家帮你戴上一件饰品或贴上一张贴纸","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0121","cat":"dare","text":"与右边玩家双手相对，玩一次经典的“拍手躲避”小游戏","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0122","cat":"dare","text":"用脸颊轻靠在左边玩家的肩膀，表达依恋，直到下一局结束","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0123","cat":"dare","text":"由右边玩家为你整理发型，保持新发型直到游戏结束","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0124","cat":"dare","text":"与左边玩家手拉手，一起向全场鞠躬致意并说“谢谢大家观赏”","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c2-0125","cat":"dare","text":"将右边玩家的手掌贴在你的心口，让对方感受你当下的心跳","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-c3-0101","cat":"dare","text":"靠近右边玩家的耳边，用低沉富有磁性的声音轻声说一段暧昧台词","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0102","cat":"dare","text":"与左边玩家喝一次经典交杯酒","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0103","cat":"dare","text":"对右边玩家展示一段充满张力与魅力的眼杀（Eye Contact）对视10秒","contact":2,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0104","cat":"dare","text":"在左边自愿玩家的手背上留下一个轻柔的吻","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0105","cat":"dare","text":"与右边玩家十指紧扣，轻轻扶住对方的后颈对视15秒","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0106","cat":"dare","text":"轻轻凑到左边玩家的锁骨附近或耳际，轻吹一口气","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0107","cat":"dare","text":"与右边玩家贴面合影一张，要求气场拉满、极其有情侣氛围感","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0108","cat":"dare","text":"从背后轻轻环抱住左边自愿玩家，维持动作10秒","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0109","cat":"dare","text":"用极具撩人张力的眼神，看着右边自愿玩家并咬一下下唇","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0111","cat":"dare","text":"与右边自愿玩家分享同一根薯条/饼干棒，吃到距离不足3厘米","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0112","cat":"dare","text":"在左边玩家的额头或脸颊上亲吻一下","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0113","cat":"dare","text":"让右边玩家坐在你的大腿上，两人共同喝完半杯酒","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0114","cat":"dare","text":"在左边玩家耳边用极低的声音说出对方今晚最让你心动的部位","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0115","cat":"dare","text":"与右边玩家近距离壁咚（或椅咚）5秒，眼神不能回避","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0116","cat":"dare","text":"用最温柔的手势，为左边玩家擦拭唇角或面颊","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0117","cat":"dare","text":"与右边自愿玩家互换一件贴身饰品（如外套/手链/戒指）并戴上","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0118","cat":"dare","text":"把头深深埋在左边自愿玩家的颈窝处，保持5秒","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0119","cat":"dare","text":"用深情无比的眼神盯着右边自愿玩家，并慢慢拉近距离直到呼吸可闻","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0120","cat":"dare","text":"在左边自愿玩家的掌心亲一口，并用手把对方的手掌合上","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0121","cat":"dare","text":"与右边自愿玩家搂腰对视，假装跳一段慢板探戈/华尔兹10秒","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"spicy","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-c3-0122","cat":"dare","text":"靠近左边自愿玩家，用气音附耳说出一个关于你的隐藏秘密","contact":3,"stranger":false,"target":"partner","scene":"any","risk":"safe","difficulty":3,"adultOnly":true,"enabled":false},{"id":"dare-stranger-0101","cat":"dare","text":"走向附近一位路人或隔壁桌，礼貌且自信地询问：“请问我今天的穿搭打几分？”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0102","cat":"dare","text":"走向隔壁桌，极其有礼貌地向对方借一根薯条或一块冰块","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0103","cat":"dare","text":"走向服务员或店员，真诚微笑地对对方说一句：“你今晚忙碌的样子真的非常帅气/漂亮！”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0104","cat":"dare","text":"走向隔壁桌，向其中一位客人询问：“请问你觉得今晚这里的哪款饮料最好喝？”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0105","cat":"dare","text":"向路过的陌生人隔空大方比心，并抛出一个飞吻😘","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0106","cat":"dare","text":"走到附近陌生人面前，一本正经地问：“请问今晚银河系的月亮是在哪个方向升起来的？”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0107","cat":"dare","text":"礼貌邀请隔壁桌的客人与全场玩家共同举杯大喊一声“干杯！”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0108","cat":"dare","text":"走向一位路人，礼貌地向对方请教一个生活小妙招或推荐一首歌曲","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0109","cat":"dare","text":"走过去对隔壁桌的朋友说：“祝你们今天好运爆发，今晚吃得开心！”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0110","cat":"dare","text":"向店员或服务员要一杯温水，并微笑着奉上一句“辛苦啦”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0111","cat":"dare","text":"找一位陌生人询问时间，并夸奖对方戴的手表/服饰好看","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0112","cat":"dare","text":"隔着一两桌的距离，向另一桌的朋友大方挥手致意并露出灿烂笑容","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0113","cat":"dare","text":"走到酒吧/餐厅前台，向调酒师或工作人员送上一句真诚的节日/夜间祝福","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0114","cat":"dare","text":"找一位路人，礼貌地向对方推荐现场你觉得最好吃的一道菜/饮料","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0115","cat":"dare","text":"向路过的陌生人击掌（High Five），如果对方回应则全场欢呼","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0116","cat":"dare","text":"走过去对隔壁桌一位朋友说：“你长得非常像我一位很优秀的旧友！”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0117","cat":"dare","text":"走向一位陌生人，真诚询问：“今晚你快乐吗？祝你有个美好的夜晚！”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0118","cat":"dare","text":"请隔壁桌的朋友帮你随机报一个数字（1-100），报多少，你就需要拥抱多少人（人可重复利用）","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0119","cat":"dare","text":"走向一位路人，做出一副星探的姿态说：“打扰一下，你身上有一种特别的主角光环！”","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true},{"id":"dare-stranger-0120","cat":"dare","text":"礼貌向路人问厕所怎么走，并在离开时行一个优雅的绅士/淑女礼","contact":0,"stranger":true,"target":"stranger","scene":"public","risk":"safe","difficulty":1,"adultOnly":false,"enabled":true}]};
+
+  // ===================== 分类元信息 =====================
+  const CAT_META = {
+    truth:    { label: '真心话', color: '#ffb3c6', weight: 3 },
+    dare:     { label: '大冒险', color: '#ffd56b', weight: 3 },
+    drink:    { label: '直接喝', color: '#9fd3ff', weight: 2 },
+    deeptalk: { label: 'Deeptalk', color: '#c9b6ff', weight: 1 },
   };
 
-  // ===================== 状态 =====================
-  let segments = [];        // [{cat, catLabel, text, color}]
+  let QB = window.QUESTION_BANK;
+
+  // 确保 topics 注册表存在（导入的外部题库可能没有）
+  function ensureTopics() {
+    if (!QB.topics) QB.topics = { truth: [], deeptalk: [] };
+    ['truth', 'deeptalk'].forEach(cat => {
+      if (!QB.topics[cat] || !QB.topics[cat].length) {
+        const seen = {};
+        QB.questions.filter(q => q.cat === cat).forEach(q => {
+          if (q.topic && !seen[q.topic]) seen[q.topic] = true;
+        });
+        QB.topics[cat] = Object.keys(seen).map(id => ({ id, label: id, defaultOn: true }));
+      }
+    });
+    // 补全 adultOnly 字段（老题库可能缺失）
+    const adultIds = new Set(QB.questions.filter(q => q.adultOnly).map(q => q.id));
+    QB.topics.truth.forEach(t => { t.adultOnly = !!t.adultOnly || adultIds.has('truth-' + t.id + '-0001'); });
+  }
+  ensureTopics();
+
+  // ===================== 运行设置 =====================
+  const settings = {
+    enabled: { truth: true, dare: true, drink: true, deeptalk: true },
+    truthTopics: {}, deeptalkTopics: {},
+    allowStranger: true, maxContact: 2, adultMode: false,
+    allowOthers: false, maxAmount: 'glass',
+  };
+  ['truth', 'deeptalk'].forEach(cat => {
+    QB.topics[cat].forEach(t => { settings[cat + 'Topics'][t.id] = t.defaultOn !== false; });
+  });
+
+  let branches = [];        // [{key,label,cat,count,questions:[]}]
+  let qSegs = [];           // 按题目模式：生效的每道题目（数组，下标即扇区）
+  let qidToIndex = new Map();
+  let wheelMode = 'branch'; // 'branch' | 'question'
+  let qSampleN = 50;        // 按题目模式：随机抽多少道（按类别比例）
+  let allowRepeat = false;  // 是否允许重复抽中（false 则抽中后该题移出转盘）
+  let drawnIds = new Set(); // 已抽中且不再出现的题目 id
+  let pendingResult = null; // 旋转结束后才展示的结果
   let myLucky = null;
   let spinCount = 0;
   let isSpinning = false;
-  let lastTarget = -1;
   const rigging = { rules: [], usedExact: new Set() };
+  let rigSelQid = null;
+  let ruleSeq = 0;
+  function ruleId() { return ++ruleSeq; }
 
-  // ===================== 构建扇区 =====================
-  function buildSegments() {
-    segments = [];
-    const c = CONFIG;
-    if (c.truth.enabled) {
-      c.truth.topics.filter(t => t.enabled).forEach(t =>
-        t.questions.forEach(q => segments.push({ cat: 'truth', catLabel: c.truth.label, text: q, color: c.truth.color }))
-      );
+  // ===================== 过滤 + 分支 =====================
+  // 饮酒量级强度：越往后越猛
+  const AMOUNT_LEVEL = { sip: 0, 'half-glass': 0.5, glass: 1, chug: 2, bottle: 3 };
+  function isActive(q) {
+    if (!settings.enabled[q.cat]) return false;
+    if (q.enabled === false) return false;
+    if ((q.adultOnly || q.risk === 'spicy') && !settings.adultMode) return false;
+    if (q.cat === 'truth' || q.cat === 'deeptalk') {
+      const map = settings[q.cat + 'Topics'];
+      if (map[q.topic] === false) return false;
     }
-    if (c.dare.enabled) {
-      c.dare.items
-        .filter(it => (c.dare.allowStranger || !it.stranger) && it.contact <= c.dare.maxContact)
-        .forEach(it => segments.push({ cat: 'dare', catLabel: c.dare.label, text: it.text, color: c.dare.color }));
+    if (q.cat === 'dare') {
+      if (q.contact > settings.maxContact) return false;
+      if (q.stranger && !settings.allowStranger) return false;
     }
-    if (c.drink.enabled) {
-      c.drink.amounts.forEach(a => segments.push({ cat: 'drink', catLabel: c.drink.label, text: a, color: c.drink.color }));
+    if (q.cat === 'drink') {
+      if (q.amount && AMOUNT_LEVEL[q.amount] > AMOUNT_LEVEL[settings.maxAmount]) return false;
+      if (q.who && q.who !== 'self' && !settings.allowOthers) return false;
     }
-    if (c.deeptalk.enabled) {
-      c.deeptalk.topics.filter(t => t.enabled).forEach(t =>
-        t.questions.forEach(q => segments.push({ cat: 'deeptalk', catLabel: c.deeptalk.label, text: q, color: c.deeptalk.color }))
-      );
+    return true;
+  }
+
+  function branchLabel(q) {
+    if (q.cat === 'truth' || q.cat === 'deeptalk') {
+      const t = (QB.topics[q.cat] || []).find(t => t.id === q.topic);
+      return (t && t.label) || q.topic || CAT_META[q.cat].label;
     }
-    // 全关时给一个占位，避免空转盘报错
-    if (segments.length === 0) {
-      segments.push({ cat: '__none__', catLabel: '提示', text: '请至少开启一个类别', color: '#6b7280' });
+    if (q.cat === 'dare') {
+      if (q.stranger) return '陌生人互动';
+      return ['', '大冒险 ● 社牛solo', '大冒险 ● 礼貌试探', '大冒险 ● 升温互动', '大冒险 ● 全场尖叫'][q.contact] || '大冒险';
     }
+    if (q.cat === 'drink') {
+      if (q.combo) return '喝+一道题';
+      if (q.who && q.who !== 'self') return '指定他人/接力';
+      return { sip: '基础喝', glass: '喝一杯', chug: '罚酒干杯', bottle: '整瓶' }[q.amount] || '直接喝';
+    }
+    return CAT_META[q.cat].label;
+  }
+
+  function buildBranches() {
+    const map = new Map();
+    QB.questions.forEach(q => {
+      if (!isActive(q)) return;
+      if (!allowRepeat && drawnIds.has(q.id)) return;
+      const key = q.cat + '::' + branchLabel(q);
+      if (!map.has(key)) map.set(key, { key, label: branchLabel(q), cat: q.cat, count: 0, questions: [] });
+      const b = map.get(key); b.count++; b.questions.push(q);
+    });
+    branches = [...map.values()];
+  }
+
+  // 按题目模式：从生效题里随机抽 qSampleN 道（按类别比例分配）；精准暗箱命中的题强制入样
+  function buildQuestionSegs() {
+    const active = QB.questions.filter(q => isActive(q) && (allowRepeat || !drawnIds.has(q.id)));
+    // 1) 精准暗箱引用的题强制入样，保证能停到它
+    const forcedIds = new Set();
+    rigging.rules.forEach(r => {
+      if ((r.type === 'exactQ' || r.type === 'prefixQ') && QB.questions.some(q => q.id === r.qid && isActive(q))) forcedIds.add(r.qid);
+    });
+    const forced = active.filter(q => forcedIds.has(q.id));
+    const remaining = Math.max(0, qSampleN - forced.length);
+    // 2) 按各类别在生效题中的占比分配名额
+    const byCat = {};
+    active.forEach(q => { (byCat[q.cat] = byCat[q.cat] || []).push(q); });
+    const totalActive = active.length || 1;
+    const alloc = {};
+    let assigned = 0;
+    Object.keys(byCat).forEach(cat => {
+      const n = Math.floor(remaining * byCat[cat].length / totalActive);
+      alloc[cat] = n; assigned += n;
+    });
+    let rem = remaining - assigned;            // 余数轮转补齐
+    const cats = Object.keys(byCat); let ci = 0;
+    while (rem-- > 0) { alloc[cats[ci % cats.length]]++; ci++; }
+    // 3) 每类内随机抽样（排除已强制的）
+    const sampled = [];
+    Object.keys(byCat).forEach(cat => {
+      const arr = shuffle(byCat[cat].filter(q => !forcedIds.has(q.id)));
+      sampled.push(...arr.slice(0, alloc[cat] || 0));
+    });
+    qSegs = shuffle(forced.concat(sampled));
+    qidToIndex = new Map();
+    qSegs.forEach((q, i) => qidToIndex.set(q.id, i));
+  }
+
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
   }
 
   function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 
   function buildPrizes() {
-    return segments.map((s, i) => ({
-      background: i % 2 === 0 ? s.color : shade(s.color, -18),
-      fonts: [{ text: truncate(s.text, 9), top: '40%', fontColor: '#10131f', fontSize: '12px', fontWeight: 'bold' }]
+    const empty = [{ background: '#6b7280', fonts: [{ text: '请开启内容', top: '40%', fontColor: '#fff', fontSize: '13px', fontWeight: 'bold' }] }];
+    if (wheelMode === 'question') {
+      if (qSegs.length === 0) return empty;
+      return qSegs.map((q, i) => ({
+        background: i % 2 === 0 ? CAT_META[q.cat].color : shade(CAT_META[q.cat].color, -18),
+        fonts: [{ text: truncate(q.text, 12), top: '40%', fontColor: '#5a3a47', fontSize: '11px', fontWeight: 'bold' }]
+      }));
+    }
+    if (branches.length === 0) return empty;
+    return branches.map((b, i) => ({
+      background: i % 2 === 0 ? CAT_META[b.cat].color : shade(CAT_META[b.cat].color, -18),
+      fonts: [{ text: truncate(b.label + '(' + b.count + ')', 11), top: '40%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold' }]
     }));
   }
 
-  // 颜色微调（hex 亮度）
   function shade(hex, amt) {
     const m = hex.replace('#', '');
     let r = parseInt(m.slice(0, 2), 16), g = parseInt(m.slice(2, 4), 16), b = parseInt(m.slice(4, 6), 16);
@@ -323,47 +554,53 @@
     return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
   }
 
-  // ===================== 转盘渲染 =====================
   function renderWheel() {
     if (myLucky) {
       myLucky.prizes = buildPrizes();
     } else {
       myLucky = new LuckyCanvas.LuckyWheel('#wheel', {
-        width: '420px',
-        height: '420px',
-        blocks: [{ padding: '12px', background: '#0b0e1f' }],
+        width: '430px', height: '430px',
+        blocks: [{ padding: '12px', background: '#ffffff' }],
         prizes: buildPrizes(),
-        buttons: [{
-          radius: '38%', background: '#ff5a5f', pointer: true,
-          fonts: [{ text: '开始', top: '-12px', fontColor: '#fff', fontSize: '16px', fontWeight: 'bold' }]
-        }],
-        start: onSpinStart
+        buttons: [{ radius: '38%', background: '#ff6b9d', pointer: true,
+          fonts: [{ text: '开始', top: '-12px', fontColor: '#fff', fontSize: '16px', fontWeight: 'bold' }] }],
+        start: onSpinStart,
+        end: onSpinEnd
       });
     }
   }
 
   // ===================== 抽取逻辑 =====================
-  function weightedRandomIndex() {
-    const catWeights = {};
-    segments.forEach(s => { catWeights[s.cat] = (catWeights[s.cat] || 0) + CONFIG[s.cat].weight; });
-    const cats = Object.keys(catWeights);
-    const total = cats.reduce((a, c) => a + catWeights[c], 0);
-    let r = Math.random() * total, chosen = null;
-    for (const c of cats) { r -= catWeights[c]; if (r <= 0) { chosen = c; break; } }
-    if (!chosen) chosen = cats[0];
-    const pool = segments.map((s, i) => i).filter(i => segments[i].cat === chosen);
+  function branchWeight(b) { return CAT_META[b.cat].weight * Math.max(1, b.count); }
+
+  function pickBranch(cat) {
+    let pool = branches;
+    if (cat) pool = branches.filter(b => b.cat === cat);
+    if (pool.length === 0) pool = branches;
+    if (pool.length === 0) return null;
+    const total = pool.reduce((a, b) => a + branchWeight(b), 0);
+    let r = Math.random() * total;
+    for (const b of pool) { r -= branchWeight(b); if (r <= 0) return b; }
+    return pool[0];
+  }
+
+  // 按题目模式：在已抽样的 qSegs 里均匀随机抽一道（cat 限定类别）；样本已按类别比例分配
+  function pickQuestion(cat) {
+    let pool = qSegs;
+    if (cat) pool = pool.filter(q => q.cat === cat);
+    if (pool.length === 0) pool = qSegs;
+    if (pool.length === 0) return null;
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  // 暗箱：返回强制类别 id 或 null
+  // 返回 {kind:'cat',cat} 或 {kind:'q',qid}，或 null
   function resolveRigging(n) {
-    for (const rule of rigging.rules) {
-      if (rule.type === 'prefix' && n <= rule.count) return rule.cat;
-    }
-    for (const rule of rigging.rules) {
-      if (rule.type === 'exact' && rule.spin === n && !rigging.usedExact.has(rule.spin)) {
-        rigging.usedExact.add(rule.spin);
-        return rule.cat;
+    for (const r of rigging.rules) if (r.type === 'prefixQ' && n <= r.count) return { kind: 'q', qid: r.qid };
+    for (const r of rigging.rules) if (r.type === 'prefix' && n <= r.count) return { kind: 'cat', cat: r.cat };
+    for (const r of rigging.rules) {
+      if ((r.type === 'exactQ' || r.type === 'exact') && r.spin === n && !rigging.usedExact.has(r.id)) {
+        rigging.usedExact.add(r.id);
+        return r.type === 'exactQ' ? { kind: 'q', qid: r.qid } : { kind: 'cat', cat: r.cat };
       }
     }
     return null;
@@ -371,130 +608,493 @@
 
   function onSpinStart() {
     if (isSpinning) return;
-    const realSegs = segments.filter(s => s.cat !== '__none__');
-    if (realSegs.length === 0) { alert('请至少开启一个内容类别再开始'); return; }
+    const segCount = wheelMode === 'question' ? qSegs.length : branches.length;
+    if (segCount === 0) {
+      if (!allowRepeat && drawnIds.size > 0) alert('题目已抽完（不重复模式）。点『重置已抽』再玩一轮。');
+      else alert('请至少开启一个内容类别再开始');
+      isSpinning = false; spinCount--; document.getElementById('roundNum').textContent = spinCount;
+      return;
+    }
     isSpinning = true;
     spinCount++;
     document.getElementById('roundNum').textContent = spinCount;
 
-    const forcedCat = resolveRigging(spinCount);
-    let targetIndex;
-    if (forcedCat) {
-      const pool = segments.map((s, i) => i).filter(i => segments[i].cat === forcedCat);
-      targetIndex = pool.length ? pool[Math.floor(Math.random() * pool.length)] : weightedRandomIndex();
-    } else {
-      targetIndex = weightedRandomIndex();
-    }
-    lastTarget = targetIndex;
+    const rig = resolveRigging(spinCount);
+    let q = null, idx = 0;
 
+    if (wheelMode === 'question') {
+      // 按题目模式
+      if (rig && rig.kind === 'q') q = QB.questions.find(x => x.id === rig.qid && isActive(x)) || null;
+      if (!q && rig && rig.kind === 'cat') q = pickQuestion(rig.cat);
+      if (!q) q = pickQuestion(null);
+      if (!q) { alert('请至少开启一个内容类别再开始'); isSpinning = false; spinCount--; document.getElementById('roundNum').textContent = spinCount; return; }
+      idx = qidToIndex.get(q.id);
+      if (idx === undefined) { q = pickQuestion(rig && rig.kind === 'cat' ? rig.cat : null) || pickQuestion(null); idx = qidToIndex.get(q.id); } // 兜底：命中的题未进样本
+    } else {
+      // 按类型（分支）模式
+      let targetBranch = null;
+      if (rig && rig.kind === 'q') {
+        q = QB.questions.find(x => x.id === rig.qid);
+        targetBranch = q ? branches.find(b => b.questions.some(x => x.id === rig.qid)) : null;
+      }
+      if (!targetBranch) {
+        const forcedCat = (rig && rig.kind === 'cat') ? rig.cat : null;
+        targetBranch = pickBranch(forcedCat);
+        if (!targetBranch) { alert('请至少开启一个内容类别再开始'); isSpinning = false; spinCount--; document.getElementById('roundNum').textContent = spinCount; return; }
+        q = targetBranch.questions[Math.floor(Math.random() * targetBranch.questions.length)];
+      }
+      idx = branches.indexOf(targetBranch);
+    }
+
+    // 旋转期间先把结果区置为「旋转中」，避免提前显示题目
+    pendingResult = q;
+    document.getElementById('result').innerHTML = '<span class="pill" style="background:linear-gradient(135deg,#ff9ec4,#ff6b9d);color:#fff">🎡 旋转中…</span>';
     myLucky.play();
     const duration = 2600 + Math.random() * 900;
-    setTimeout(() => {
-      myLucky.stop(targetIndex);
-      setTimeout(() => { showResult(targetIndex); isSpinning = false; }, 1400);
-    }, duration);
+    setTimeout(() => { myLucky.stop(idx); }, duration); // 真正的结果在 end 回调里展示
   }
 
-  function showResult(i) {
-    const s = segments[i];
-    if (!s) return;
+  // 判断某题是否被暗箱规则引用（被引用则永不从转盘移除，保证可重复命中）
+  function isRiggingProtected(id) {
+    return rigging.rules.some(r => (r.type === 'exactQ' || r.type === 'prefixQ') && r.qid === id);
+  }
+
+  // 在不重复抽取模式下，仅把「刚抽中的这一道」从当前转盘移除，其余扇区保持稳定（不重新抽样打乱）
+  function removeDrawnFromWheel(id) {
+    if (wheelMode === 'question') {
+      const i = qSegs.findIndex(q => q.id === id);
+      if (i >= 0) {
+        qSegs.splice(i, 1);
+        qidToIndex = new Map();
+        qSegs.forEach((q, idx) => qidToIndex.set(q.id, idx));
+        if (myLucky) myLucky.prizes = buildPrizes();
+      }
+    } else {
+      rebuild(); // 分支模式：确定性剔除该道（不会打乱其他分支）
+    }
+  }
+
+  // 转盘真正停下后才会触发：先展示结果，再（不允许重复时）移出已抽题
+  function onSpinEnd() {
+    if (pendingResult) {
+      showResult(pendingResult); // 结束时刻仍显示这道题
+      // 不允许重复：把抽中的题移出转盘，但暗箱强制题需保留
+      if (!allowRepeat && !isRiggingProtected(pendingResult.id)) {
+        drawnIds.add(pendingResult.id); // 该道题被消费，下一轮不会再出现
+        removeDrawnFromWheel(pendingResult.id); // 仅移除这一道，转盘其余保持稳定
+      } else {
+        updateBankStat();
+      }
+    }
+    isSpinning = false;
+    pendingResult = null;
+  }
+
+  function showResult(q) {
     const box = document.getElementById('result');
     box.classList.remove('placeholder');
-    box.innerHTML =
-      '<span class="pill" style="background:' + s.color + '">' + s.catLabel + '</span><br>' + s.text;
+    const catLabel = CAT_META[q.cat].label;
+    const topicLabel = (q.topic && (QB.topics[q.cat] || []).find(t => t.id === q.topic)) ? ((QB.topics[q.cat].find(t => t.id === q.topic).label) + ' · ') : '';
+    let extra = '';
+    if (q.cat === 'dare') extra = ' · 接触' + q.contact + (q.stranger ? ' · 陌生人' : '');
+    if (q.cat === 'drink') extra = ' · ' + (q.combo ? '含附加题' : (q.who !== 'self' ? '指定他人' : '自喝'));
+    box.innerHTML = '<span class="pill" style="background:' + CAT_META[q.cat].color + '">' + catLabel + '</span> ' +
+      '<span class="pill-risk" style="background:var(--tint);color:var(--muted);border:1px solid var(--line)">' + topicLabel + (q.risk || 'safe') + extra + '</span><br>' + q.text;
   }
 
-  // ===================== 面板交互 =====================
-  function renderTruthTopics() {
-    const box = document.getElementById('truthTopics');
+  // ===================== 面板：分类/话题开关 =====================
+  function renderCatSwitches() {
+    const box = document.getElementById('catSwitches');
     box.innerHTML = '';
-    CONFIG.truth.topics.forEach(t => {
-      const l = document.createElement('label');
-      l.className = 'chk';
-      l.innerHTML = '<input type="checkbox" data-topic="' + t.id + '"' + (t.enabled ? ' checked' : '') + '> ' + t.label;
+    Object.keys(CAT_META).forEach(k => {
+      const l = document.createElement('label'); l.className = 'chk';
+      l.innerHTML = '<input type="checkbox" data-cat="' + k + '"' + (settings.enabled[k] ? ' checked' : '') + '> ' + CAT_META[k].label;
       box.appendChild(l);
     });
   }
 
-  function fillCatSelect(sel) {
-    sel.innerHTML = '';
-    Object.keys(CONFIG).forEach(k => {
-      const o = document.createElement('option');
-      o.value = k; o.textContent = CONFIG[k].label;
-      sel.appendChild(o);
+  function renderTopicChecks() {
+    const tb = document.getElementById('truthTopics'); tb.innerHTML = '';
+    QB.topics.truth.forEach(t => {
+      const l = document.createElement('label'); l.className = 'chk';
+      l.innerHTML = '<input type="checkbox" data-topic="truth:' + t.id + '"' + (settings.truthTopics[t.id] ? ' checked' : '') + '> ' + t.label;
+      tb.appendChild(l);
+    });
+    const sep = document.createElement('div'); sep.style.marginTop = '8px'; sep.style.color = 'var(--muted)'; sep.textContent = 'Deeptalk 话题：';
+    tb.appendChild(sep);
+    QB.topics.deeptalk.forEach(t => {
+      const l = document.createElement('label'); l.className = 'chk';
+      l.innerHTML = '<input type="checkbox" data-topic="deeptalk:' + t.id + '"' + (settings.deeptalkTopics[t.id] ? ' checked' : '') + '> ' + t.label;
+      tb.appendChild(l);
     });
   }
 
+  function fillCatSelect(sel, includeAll) {
+    sel.innerHTML = '';
+    if (includeAll) { const o = document.createElement('option'); o.value = 'all'; o.textContent = '全部分类'; sel.appendChild(o); }
+    Object.keys(CAT_META).forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = CAT_META[k].label; sel.appendChild(o); });
+  }
+
   function renderRules() {
-    const box = document.getElementById('ruleList');
-    box.innerHTML = '';
-    if (rigging.rules.length === 0) {
-      box.innerHTML = '<div class="hint">暂无暗箱规则。</div>';
-      return;
-    }
+    const box = document.getElementById('ruleList'); box.innerHTML = '';
+    if (rigging.rules.length === 0) { box.innerHTML = '<div class="hint">暂无暗箱规则。</div>'; return; }
     rigging.rules.forEach((rule, idx) => {
-      const div = document.createElement('div');
-      div.className = 'rule';
-      const desc = rule.type === 'exact'
-        ? ('第 ' + rule.spin + ' 次必中')
-        : ('前 ' + rule.count + ' 次必中');
-      div.innerHTML =
-        '<span><span class="cat-dot" style="background:' + CONFIG[rule.cat].color + '"></span>' +
-        desc + '「' + CONFIG[rule.cat].label + '」</span>';
-      const btn = document.createElement('button');
-      btn.className = 'ghost sm';
-      btn.textContent = '删除';
+      const div = document.createElement('div'); div.className = 'rule';
+      let desc, color, label;
+      if (rule.type === 'exact' || rule.type === 'prefix') {
+        desc = rule.type === 'exact' ? ('第 ' + rule.spin + ' 次必中') : ('前 ' + rule.count + ' 次必中');
+        color = CAT_META[rule.cat].color; label = CAT_META[rule.cat].label;
+      } else {
+        const qq = QB.questions.find(x => x.id === rule.qid);
+        const n = rule.type === 'exactQ' ? rule.spin : rule.count;
+        desc = (rule.type === 'exactQ' ? '第 ' : '前 ') + n + ' 次必中此题';
+        color = CAT_META[qq ? qq.cat : 'truth'].color;
+        label = qq ? truncate(qq.text, 14) : '?';
+      }
+      div.innerHTML = '<span><span class="cat-dot" style="background:' + color + '"></span>' + desc + '「' + label + '」</span>';
+      const btn = document.createElement('button'); btn.className = 'ghost sm'; btn.textContent = '删除';
       btn.onclick = () => { rigging.rules.splice(idx, 1); renderRules(); };
-      div.appendChild(btn);
+      div.appendChild(btn); box.appendChild(div);
+    });
+  }
+
+  function rebuild() { buildBranches(); buildQuestionSegs(); renderWheel(); updateBankStat(); }
+
+  function updateBankStat() {
+    document.getElementById('bankStat').textContent = '题库 ' + QB.questions.length + ' 题';
+  }
+
+  // ===================== 暗箱·精准题目搜索 =====================
+  function renderRigResults() {
+    const kw = (document.getElementById('rigSearch').value || '').trim().toLowerCase();
+    const box = document.getElementById('rigResults'); box.innerHTML = '';
+    if (!kw) return;
+    let list = QB.questions.filter(q => isActive(q) && (q.text || '').toLowerCase().includes(kw));
+    if (list.length > 20) list = list.slice(0, 20);
+    if (list.length === 0) { box.innerHTML = '<div class="hint" style="padding:8px">无匹配（只搜索当前生效题目；可放宽过滤或开启限制级模式）</div>'; return; }
+    list.forEach(q => {
+      const div = document.createElement('div');
+      div.className = 'rig-item' + (rigSelQid === q.id ? ' sel' : '');
+      div.innerHTML = '<span class="cat-dot" style="background:' + CAT_META[q.cat].color + '"></span><span class="txt">' + q.text + '</span>';
+      div.onclick = () => { rigSelQid = q.id; renderRigResults(); };
       box.appendChild(div);
     });
   }
 
-  function rebuild() {
-    buildSegments();
-    renderWheel();
+  // ===================== 编辑器 =====================
+  function topicOptionsFor(cat) {
+    if (cat === 'truth' || cat === 'deeptalk') return QB.topics[cat] || [];
+    return [];
+  }
+  function refreshEdCatSelect() {
+    const sel = document.getElementById('edCat'); fillCatSelect(sel, true);
+    const nc = document.getElementById('edNewCat'); fillCatSelect(nc, false);
+    updateEdNewTopic();
+    updateEdTopicFilter();
+  }
+  function updateEdNewTopic() {
+    const cat = document.getElementById('edNewCat').value;
+    const sel = document.getElementById('edNewTopic'); sel.innerHTML = '';
+    const opts = topicOptionsFor(cat);
+    if (opts.length === 0) { const o = document.createElement('option'); o.value = ''; o.textContent = '—'; sel.appendChild(o); }
+    else opts.forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; sel.appendChild(o); });
+    const nl = document.getElementById('edNewLevel');
+    if (cat === 'dare') { nl.disabled = false; }
+    else { nl.disabled = true; nl.value = '0'; }
+  }
+  // 编辑器二级话题筛选下拉：根据所选主分类填充（仅 truth/deeptalk 有话题范围）
+  function updateEdTopicFilter() {
+    const cat = document.getElementById('edCat').value;
+    const sel = document.getElementById('edTopic'); sel.innerHTML = '';
+    const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = '全部话题范围'; sel.appendChild(o0);
+    topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; sel.appendChild(o); });
+    const lvlSel = document.getElementById('edLevel');
+    if (cat === 'dare' || cat === 'all') { lvlSel.disabled = false; }
+    else { lvlSel.disabled = true; lvlSel.value = 'all'; }
   }
 
-  // 绑定事件
-  document.querySelectorAll('input[data-cat]').forEach(cb => {
-    cb.addEventListener('change', e => {
-      CONFIG[e.target.dataset.cat].enabled = e.target.checked;
-      rebuild();
+  function renderEditor() {
+    const cat = document.getElementById('edCat').value;
+    const topic = document.getElementById('edTopic').value;
+    const kw = document.getElementById('edSearch').value.trim().toLowerCase();
+    const body = document.getElementById('edBody'); body.innerHTML = '';
+    let list = QB.questions.filter(q => cat === 'all' || q.cat === cat);
+    if (topic !== 'all') list = list.filter(q => q.topic === topic);
+    const lvl = document.getElementById('edLevel').value;
+    if (lvl !== 'all') list = list.filter(q => String(q.contact) === lvl);
+    if (kw) list = list.filter(q => (q.text || '').toLowerCase().includes(kw));
+    if (list.length > 400) {
+      const note = document.createElement('tr'); note.innerHTML = '<td colspan="4" class="hint" style="padding:8px">匹配 ' + list.length + ' 题，仅显示前 400；用搜索缩小范围。</td>';
+      body.appendChild(note); list = list.slice(0, 400);
+    }
+    list.forEach(q => {
+      const tr = document.createElement('tr');
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = q.enabled !== false;
+      cb.onchange = () => { q.enabled = cb.checked; rebuild(); };
+      const td1 = document.createElement('td'); td1.appendChild(cb);
+      const td2 = document.createElement('td');
+      const inp = document.createElement('input'); inp.type = 'text'; inp.value = q.text;
+      inp.onchange = () => { q.text = inp.value.trim() || q.text; };
+      td2.appendChild(inp);
+      const td3 = document.createElement('td');
+      const rs = document.createElement('select'); rs.className = 'risk';
+      ['safe', 'mild', 'spicy'].forEach(r => { const o = document.createElement('option'); o.value = r; o.textContent = r; if ((q.risk || 'safe') === r) o.selected = true; rs.appendChild(o); });
+      rs.onchange = () => { q.risk = rs.value; if (q.risk === 'spicy') q.adultOnly = true; rebuild(); };
+      td3.appendChild(rs);
+      const tdScale = document.createElement('td');
+      if (q.cat === 'dare') {
+        const cs = document.createElement('select'); cs.className = 'risk';
+        [0, 1, 2, 3].forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = '尺度' + v; if ((q.contact || 0) === v) o.selected = true; cs.appendChild(o); });
+        cs.onchange = () => { q.contact = parseInt(cs.value, 10); rebuild(); };
+        tdScale.appendChild(cs);
+      } else { tdScale.textContent = '—'; tdScale.style.color = 'var(--muted)'; }
+      const td4 = document.createElement('td');
+      const del = document.createElement('button'); del.className = 'ghost sm'; del.textContent = '删';
+      del.onclick = () => {
+        const i = QB.questions.indexOf(q); if (i >= 0) QB.questions.splice(i, 1);
+        renderEditor(); rebuild();
+      };
+      td4.appendChild(del);
+      tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(tdScale); tr.appendChild(td4);
+      body.appendChild(tr);
     });
+  }
+
+  function doExport() {
+    const blob = new Blob([JSON.stringify(QB, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'question-bank.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // CSV：字段超集，方便表格批量改；导出带表头
+  const CSV_FIELDS = ['id', 'cat', 'topic', 'text', 'risk', 'difficulty', 'enabled', 'contact', 'stranger', 'target', 'scene', 'who', 'amount', 'combo', 'adultOnly'];
+  function csvCell(v) {
+    if (v === undefined || v === null) v = '';
+    const s = String(v);
+    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+  function doExportCsv() {
+    const rows = [CSV_FIELDS.join(',')];
+    QB.questions.forEach(q => {
+      rows.push(CSV_FIELDS.map(f => csvCell(q[f])).join(','));
+    });
+    const blob = new Blob(['\ufeff' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'question-bank.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  function parseCsv(text) {
+    const rows = []; let row = [], cur = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+        else cur += c;
+      } else {
+        if (c === '"') q = true;
+        else if (c === ',') { row.push(cur); cur = ''; }
+        else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cur); rows.push(row); row = []; cur = ''; }
+        else cur += c;
+      }
+    }
+    if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+    return rows.filter(r => r.length && r.some(x => x.trim() !== ''));
+  }
+  function csvToQuestions(text) {
+    const rows = parseCsv(text);
+    const header = rows[0].map(h => h.trim());
+    const out = [];
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i]; const o = {};
+      header.forEach((h, idx) => { o[h] = r[idx]; });
+      if (!o.cat || !o.text) return null;
+      const q = {
+        id: o.id || (o.cat + '-csv-' + i),
+        cat: o.cat,
+        text: o.text,
+        risk: o.risk || 'safe',
+        difficulty: parseInt(o.difficulty, 10) || 1,
+        enabled: o.enabled === undefined ? true : (o.enabled !== 'false' && o.enabled !== '0'),
+      };
+      if (o.topic) q.topic = o.topic;
+      if (o.contact !== undefined && o.contact !== '') q.contact = parseInt(o.contact, 10) || 0;
+      if (o.stranger !== undefined && o.stranger !== '') q.stranger = (o.stranger !== 'false' && o.stranger !== '0');
+      if (o.target) q.target = o.target;
+      if (o.scene) q.scene = o.scene;
+      if (o.who) q.who = o.who;
+      if (o.amount) q.amount = o.amount;
+      if (o.combo !== undefined && o.combo !== '') q.combo = (o.combo !== 'false' && o.combo !== '0');
+      if (o.adultOnly !== undefined && o.adultOnly !== '') q.adultOnly = (o.adultOnly !== 'false' && o.adultOnly !== '0');
+      if (q.risk === 'spicy') q.adultOnly = true;
+      out.push(q);
+    }
+    return out;
+  }
+
+  // 导入后清理失效的暗箱引用（旧 qid 可能已不存在）+ 重置轮次
+  function afterImportReset() {
+    rigging.rules = rigging.rules.filter(r => {
+      if (r.type === 'exactQ' || r.type === 'prefixQ') return QB.questions.some(q => q.id === r.qid);
+      return true;
+    });
+    rigging.usedExact.clear();
+    spinCount = 0;
+    document.getElementById('roundNum').textContent = '0';
+    renderRules();
+  }
+
+  function doImport(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!data || !Array.isArray(data.questions)) throw new Error('缺少 questions 数组');
+        data.questions.forEach(q => { if (!q.cat || !q.text) throw new Error('题目缺少 cat/text'); });
+        QB = data; ensureTopics();
+        ['truth', 'deeptalk'].forEach(c => { settings[c + 'Topics'] = {}; QB.topics[c].forEach(t => settings[c + 'Topics'][t.id] = t.defaultOn !== false); });
+        renderTopicChecks(); refreshEdCatSelect(); renderEditor(); rebuild(); afterImportReset();
+        alert('导入成功：' + QB.questions.length + ' 题（已整体覆盖原题库）');
+      } catch (e) { alert('导入失败：' + e.message); }
+    };
+    reader.readAsText(file);
+  }
+
+  function doImportCsv(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const questions = csvToQuestions(reader.result);
+        if (!questions) throw new Error('CSV 缺少 cat/text 列');
+        if (questions.length === 0) throw new Error('CSV 无有效题目行');
+        QB = { questions, topics: { truth: [], deeptalk: [] }, stats: { note: 'from CSV import' } };
+        ensureTopics();
+        ['truth', 'deeptalk'].forEach(c => { settings[c + 'Topics'] = {}; QB.topics[c].forEach(t => settings[c + 'Topics'][t.id] = t.defaultOn !== false); });
+        renderTopicChecks(); refreshEdCatSelect(); renderEditor(); rebuild(); afterImportReset();
+        alert('CSV 导入成功：' + QB.questions.length + ' 题（已整体覆盖原题库；话题标签回退为 id）');
+      } catch (e) { alert('CSV 导入失败：' + e.message); }
+    };
+    reader.readAsText(file);
+  }
+
+  // ===================== 事件绑定 =====================
+  document.getElementById('catSwitches').addEventListener('change', e => {
+    if (e.target.dataset.cat) { settings.enabled[e.target.dataset.cat] = e.target.checked; rebuild(); }
   });
+  document.querySelectorAll('input[name="wheelMode"]').forEach(r => r.addEventListener('change', e => {
+    if (e.target.checked) {
+      wheelMode = e.target.value;
+      const hint = document.getElementById('wheelModeHint');
+      if (wheelMode === 'question') hint.textContent = '当前「按题目」：已按类别比例从生效题随机抽 ' + qSampleN + ' 道放进转盘，停下直接显示该题原文。';
+      else hint.textContent = '当前「按类型」：每格代表一个类别，停下后在该类内随机抽一题。';
+      rebuild();
+    }
+  }));
   document.getElementById('truthTopics').addEventListener('change', e => {
     if (e.target.dataset.topic) {
-      const t = CONFIG.truth.topics.find(x => x.id === e.target.dataset.topic);
-      if (t) { t.enabled = e.target.checked; rebuild(); }
+      const [cat, id] = e.target.dataset.topic.split(':');
+      settings[cat + 'Topics'][id] = e.target.checked; rebuild();
     }
   });
-  document.getElementById('allowStranger').addEventListener('change', e => {
-    CONFIG.dare.allowStranger = e.target.checked; rebuild();
-  });
-  document.getElementById('maxContact').addEventListener('change', e => {
-    CONFIG.dare.maxContact = parseInt(e.target.value, 10); rebuild();
+  document.getElementById('allowStranger').addEventListener('change', e => { settings.allowStranger = e.target.checked; rebuild(); });
+  document.getElementById('maxContact').addEventListener('change', e => { settings.maxContact = parseInt(e.target.value, 10); rebuild(); });
+  document.getElementById('adultMode').addEventListener('change', e => {
+    settings.adultMode = e.target.checked;
+    // 自动勾选/取消成人话题
+    QB.topics.truth.forEach(t => { if (t.adultOnly) settings.truthTopics[t.id] = e.target.checked; });
+    // 自动放开/收回全场尖叫(3级)接触等级
+    const mc = document.getElementById('maxContact');
+    if (e.target.checked) { if (settings.maxContact < 3) { settings.maxContact = 3; mc.value = '3'; } }
+    else { if (settings.maxContact > 2) { settings.maxContact = 2; mc.value = '2'; } }
+    renderTopicChecks(); rebuild();
   });
   document.getElementById('rebuild').addEventListener('click', rebuild);
-  document.getElementById('resetRound').addEventListener('click', () => {
-    spinCount = 0; rigging.usedExact.clear();
-    document.getElementById('roundNum').textContent = '0';
-  });
+  document.getElementById('resetRound').addEventListener('click', () => { spinCount = 0; rigging.usedExact.clear(); document.getElementById('roundNum').textContent = '0'; });
+  document.getElementById('allowRepeat').addEventListener('change', e => { allowRepeat = e.target.checked; rebuild(); });
+  document.getElementById('resetDrawn').addEventListener('click', () => { drawnIds.clear(); rebuild(); });
+  document.getElementById('allowOthers').addEventListener('change', e => { settings.allowOthers = e.target.checked; rebuild(); });
+  document.getElementById('maxAmount').addEventListener('change', e => { settings.maxAmount = e.target.value; rebuild(); });
+  document.getElementById('maxAmount').value = settings.maxAmount;
+  document.getElementById('allowStranger').checked = settings.allowStranger;
+  document.getElementById('maxContact').value = String(settings.maxContact);
+
+  // ===================== 设置抽屉 =====================
+  const settingsDrawer = document.getElementById('settingsDrawer');
+  const settingsBackdrop = document.getElementById('settingsBackdrop');
+  const openSettings = () => { settingsDrawer.classList.add('open'); settingsBackdrop.classList.add('open'); settingsDrawer.setAttribute('aria-hidden', 'false'); };
+  const closeSettings = () => { settingsDrawer.classList.remove('open'); settingsBackdrop.classList.remove('open'); settingsDrawer.setAttribute('aria-hidden', 'true'); };
+  document.getElementById('settingsBtn').addEventListener('click', openSettings);
+  document.getElementById('settingsClose').addEventListener('click', closeSettings);
+  settingsBackdrop.addEventListener('click', closeSettings);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettings(); });
+
   document.getElementById('addExact').addEventListener('click', () => {
     const n = parseInt(document.getElementById('exactN').value, 10);
     const cat = document.getElementById('exactCat').value;
-    if (n > 0) { rigging.rules.push({ type: 'exact', spin: n, cat }); renderRules(); }
+    if (n > 0) { rigging.rules.push({ type: 'exact', spin: n, cat, id: ruleId() }); renderRules(); }
   });
   document.getElementById('addPrefix').addEventListener('click', () => {
     const k = parseInt(document.getElementById('prefixK').value, 10);
     const cat = document.getElementById('prefixCat').value;
-    if (k > 0) { rigging.rules.push({ type: 'prefix', count: k, cat }); renderRules(); }
+    if (k > 0) { rigging.rules.push({ type: 'prefix', count: k, cat, id: ruleId() }); renderRules(); }
+  });
+
+  document.getElementById('rigSearch').addEventListener('input', renderRigResults);
+  document.getElementById('addQExact').addEventListener('click', () => {
+    if (!rigSelQid) { alert('请先在上方搜索并点选一题'); return; }
+    const n = parseInt(document.getElementById('qExactN').value, 10);
+    if (n > 0) { rigging.rules.push({ type: 'exactQ', spin: n, qid: rigSelQid, id: ruleId() }); renderRules(); if (wheelMode === 'question') rebuild(); }
+  });
+  document.getElementById('addQPrefix').addEventListener('click', () => {
+    if (!rigSelQid) { alert('请先在上方搜索并点选一题'); return; }
+    const k = parseInt(document.getElementById('qPrefixK').value, 10);
+    if (k > 0) { rigging.rules.push({ type: 'prefixQ', count: k, qid: rigSelQid, id: ruleId() }); renderRules(); if (wheelMode === 'question') rebuild(); }
+  });
+  document.getElementById('qSampleN').addEventListener('change', e => {
+    const v = parseInt(e.target.value, 10);
+    if (v >= 1) { qSampleN = v; if (wheelMode === 'question') rebuild(); }
+  });
+
+  document.getElementById('btnExport').addEventListener('click', doExport);
+  document.getElementById('btnExportCsv').addEventListener('click', doExportCsv);
+  document.getElementById('btnImport').addEventListener('click', () => document.getElementById('fileInput').click());
+  document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) doImport(e.target.files[0]); e.target.value = ''; });
+  document.getElementById('btnImportCsv').addEventListener('click', () => document.getElementById('fileInputCsv').click());
+  document.getElementById('fileInputCsv').addEventListener('change', e => { if (e.target.files[0]) doImportCsv(e.target.files[0]); e.target.value = ''; });
+  document.getElementById('edRefresh').addEventListener('click', renderEditor);
+  document.getElementById('edSearch').addEventListener('input', renderEditor);
+  document.getElementById('edCat').addEventListener('change', () => { updateEdTopicFilter(); renderEditor(); });
+  document.getElementById('edTopic').addEventListener('change', renderEditor);
+  document.getElementById('edLevel').addEventListener('change', renderEditor);
+  document.getElementById('edNewCat').addEventListener('change', updateEdNewTopic);
+  document.getElementById('edAdd').addEventListener('click', () => {
+    const text = document.getElementById('edNewText').value.trim();
+    const cat = document.getElementById('edNewCat').value;
+    if (!text) { alert('请输入题干'); return; }
+    const q = { id: cat + '-user-' + Date.now(), cat, text, risk: 'safe', difficulty: 1, enabled: true };
+    if (cat === 'truth' || cat === 'deeptalk') q.topic = document.getElementById('edNewTopic').value || (QB.topics[cat][0] && QB.topics[cat][0].id);
+    if (cat === 'dare') { q.contact = parseInt(document.getElementById('edNewLevel').value, 10) || 0; q.stranger = false; q.target = 'self'; q.scene = 'any'; }
+    if (cat === 'drink') { q.amount = 'sip'; q.who = 'self'; }
+    QB.questions.push(q);
+    document.getElementById('edNewText').value = '';
+    renderEditor(); rebuild();
   });
 
   // ===================== 初始化 =====================
-  renderTruthTopics();
+  document.getElementById('subtitle').textContent =
+    '转盘一转，今晚的玩法交给运气——真心话、大冒险、直接喝，还是 Deeptalk？';
+  renderCatSwitches();
+  renderTopicChecks();
   fillCatSelect(document.getElementById('exactCat'));
   fillCatSelect(document.getElementById('prefixCat'));
   renderRules();
+  refreshEdCatSelect();
+  renderEditor();
   rebuild();
   </script>
 </body>
