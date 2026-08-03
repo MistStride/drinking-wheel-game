@@ -98,7 +98,7 @@
       },
       {
         "id": "intimacy",
-        "label": "情欲暧昧",
+        "label": "迷恋暧昧",
         "defaultOn": false,
         "spicy": true,
         "adultOnly": true

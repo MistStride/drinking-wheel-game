@@ -2,8 +2,8 @@
 // 用法: node gen-bank.js  -> 生成 question-bank.js (window.QUESTION_BANK) 与 question-bank.json
 // 设计来源: question-bank-design.md
 // v2 变更:
-//   - 新增成人内容（前任/亲密情欲暧昧/身体探索/角色扮演 + 亲密接触大冒险），标 spicy+adultOnly
-//   - 性观念/暧昧/情欲 已合并为单一话题 intimacy（亲密/情欲暧昧）
+//   - 新增成人内容（前任/迷恋暧昧/身体探索/角色扮演 + 亲密接触大冒险），标 spicy+adultOnly
+//   - 性观念/暧昧/情欲 已合并为单一话题 intimacy（迷恋暧昧）
 //   - 分支内去重（相似度 > 0.85 移除近重模板），消减模板感
 //   - 统一用 cnt 字段表示题量，target 字段留给「对象(self/partner/stranger)」语义，避免冲突
 'use strict';
@@ -203,7 +203,7 @@ const TRUTH = {
     { t: '你最{p1}的{p2}是什么？', p: { p1: ['想整', '舍不得动', '满意'], p2: ['部位', '五官'] } },
     { t: '你有没有{p1}的{p2}？', p: { p1: ['偷偷练', '被人羡慕'], p2: ['身材', '皮肤', '发量'] } },
   ]},
-  intimacy: { label: '亲密/情欲暧昧', risk: 'spicy', diff: 3, defaultOn: false, adultOnly: true, spicy: true, cnt: 110, sk: [
+  intimacy: { label: '迷恋暧昧', risk: 'spicy', diff: 3, defaultOn: false, adultOnly: true, spicy: true, cnt: 110, sk: [
     { t: '你最{p1}的一次{p2}是？', p: { p1: ['大胆', '害羞', '难忘', '意外'], p2: ['经历', '尝试', '幻想'] } },
     { t: '你最{p1}的{p2}是什么？', p: { p1: ['想试', '不敢试', '试过'], p2: ['姿势', '地点', '玩法'] } },
     { t: '你{p1}过{p2}吗？', p: { p1: ['幻想', '尝试', '好奇'], p2: ['三人', '公共场合', '角色扮演'] } },
