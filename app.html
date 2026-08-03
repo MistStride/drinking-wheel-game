@@ -209,15 +209,15 @@
       <div class="card">
         <h2>④ 大冒险 · 尺度</h2>
         <div class="row">
-          <label class="chk"><input type="checkbox" id="allowStranger" /> 允许「骚扰陌生人」类</label>
+          <label class="chk"><input type="checkbox" id="allowStranger" checked /> 允许「骚扰陌生人」类</label>
         </div>
         <div class="row">
           <span>最大肢体接触程度：</span>
           <select id="maxContact">
             <option value="0">0 · 无接触</option>
-            <option value="1">1 · 轻度（拥抱/牵手）</option>
-            <option value="2">2 · 重度（坐腿/喂食）</option>
-            <option value="3">3 · 亲密（需限制级模式）</option>
+            <option value="1">1 · 友好（拥抱/牵手）</option>
+            <option value="2" selected>2 · 暧昧（坐腿/喂食）</option>
+            <option value="3">3 · 限制级（需限制级模式）</option>
           </select>
         </div>
         <div class="hint">高于所选等级、或需限制级模式的「大冒险」不会进入转盘。</div>
@@ -294,12 +294,12 @@
           <select id="edCat"><option value="all">全部分类</option></select>
           <select id="edTopic"><option value="all">全部话题范围</option></select>
           <span class="sub" style="padding-left:0">尺度</span>
-          <select id="edLevel" title="大冒险尺度分级（0 无接触 / 1 轻度 / 2 重度 / 3 亲密·需限制级模式）">
+          <select id="edLevel" title="大冒险尺度分级（0 无接触 / 1 友好 / 2 暧昧 / 3 限制级·需限制级模式）">
             <option value="all">全部尺度</option>
             <option value="0">0 · 无接触</option>
-            <option value="1">1 · 轻度（拥抱/牵手）</option>
-            <option value="2">2 · 重度（坐腿/喂食）</option>
-            <option value="3">3 · 亲密（需限制级）</option>
+            <option value="1">1 · 友好（拥抱/牵手）</option>
+            <option value="2">2 · 暧昧（坐腿/喂食）</option>
+            <option value="3">3 · 限制级（需限制级）</option>
           </select>
           <input type="text" id="edSearch" placeholder="搜索题干…" class="wide" style="flex:1;min-width:140px" />
           <button class="sm ghost" id="edRefresh">刷新</button>
@@ -310,9 +310,9 @@
           <select id="edNewTopic"></select>
           <select id="edNewLevel" title="大冒险尺度分级">
             <option value="0">尺度 0 · 无接触</option>
-            <option value="1">尺度 1 · 轻度</option>
-            <option value="2">尺度 2 · 重度</option>
-            <option value="3">尺度 3 · 亲密</option>
+            <option value="1">尺度 1 · 友好</option>
+            <option value="2">尺度 2 · 暧昧</option>
+            <option value="3">尺度 3 · 限制级</option>
           </select>
           <button class="sm" id="edAdd">＋ 新增</button>
         </div>
@@ -365,7 +365,7 @@
   const settings = {
     enabled: { truth: true, dare: true, drink: true, deeptalk: true },
     truthTopics: {}, deeptalkTopics: {},
-    allowStranger: false, maxContact: 1, adultMode: false,
+    allowStranger: true, maxContact: 2, adultMode: false,
     allowOthers: false, maxAmount: 'glass',
   };
   ['truth', 'deeptalk'].forEach(cat => {
@@ -417,7 +417,7 @@
     }
     if (q.cat === 'dare') {
       if (q.stranger) return '陌生人互动';
-      return ['', '大冒险·无接触', '大冒险·轻度', '大冒险·重度', '大冒险·亲密'][q.contact] || '大冒险';
+      return ['', '大冒险·无接触', '大冒险·友好', '大冒险·暧昧', '大冒险·限制级'][q.contact] || '大冒险';
     }
     if (q.cat === 'drink') {
       if (q.combo) return '喝+一道题';
@@ -969,6 +969,8 @@
   document.getElementById('allowOthers').addEventListener('change', e => { settings.allowOthers = e.target.checked; rebuild(); });
   document.getElementById('maxAmount').addEventListener('change', e => { settings.maxAmount = e.target.value; rebuild(); });
   document.getElementById('maxAmount').value = settings.maxAmount;
+  document.getElementById('allowStranger').checked = settings.allowStranger;
+  document.getElementById('maxContact').value = String(settings.maxContact);
 
   document.getElementById('addExact').addEventListener('click', () => {
     const n = parseInt(document.getElementById('exactN').value, 10);

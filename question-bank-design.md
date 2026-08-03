@@ -45,7 +45,7 @@ interface TruthQ extends BaseQ {
 // 大冒险（多维标签）
 interface DareQ extends BaseQ {
   cat: 'dare';
-  contact: Contact;       // 0 无 / 1 轻 / 2 重 / 3 亲密
+  contact: Contact;       // 0 无接触 / 1 友好 / 2 暧昧 / 3 限制级
   stranger: boolean;      // 是否涉及陌生人（需 allowStranger）
   target: Target;         // 执行对象
   scene?: 'any' | 'phone' | 'public';  // 场景：任意/手机/当众
