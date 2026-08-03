@@ -259,12 +259,12 @@
           <select id="edCat"><option value="all">全部分类</option></select>
           <select id="edTopic"><option value="all">全部话题范围</option></select>
           <span class="sub" style="padding-left:0">尺度</span>
-          <select id="edLevel" title="大冒险尺度分级（0 无接触 / 1 友好 / 2 暧昧 / 3 限制级·需限制级模式）">
+          <select id="edLevel" title="大冒险尺度分级（0 社牛solo / 1 礼貌试探 / 2 升温互动 / 3 全场尖叫·需限制级模式）">
             <option value="all">全部尺度</option>
-            <option value="0">0 · 无接触</option>
-            <option value="1">1 · 友好（拥抱/牵手）</option>
-            <option value="2">2 · 暧昧（坐腿/喂食）</option>
-            <option value="3">3 · 限制级（需限制级）</option>
+            <option value="0">0 · 社牛solo（搞怪表演/声线模仿）</option>
+            <option value="1">1 · 礼貌试探（握手/击掌）</option>
+            <option value="2">2 · 升温互动（拥抱/喂食）</option>
+            <option value="3">3 · 全场尖叫（贴面/耳语）</option>
           </select>
           <input type="text" id="edSearch" placeholder="搜索题干…" class="wide" style="flex:1;min-width:140px" />
           <button class="sm ghost" id="edRefresh">刷新</button>
@@ -274,10 +274,10 @@
           <select id="edNewCat"></select>
           <select id="edNewTopic"></select>
           <select id="edNewLevel" title="大冒险尺度分级">
-            <option value="0">尺度 0 · 无接触</option>
-            <option value="1">尺度 1 · 友好</option>
-            <option value="2">尺度 2 · 暧昧</option>
-            <option value="3">尺度 3 · 限制级</option>
+            <option value="0">尺度 0 · 社牛solo</option>
+            <option value="1">尺度 1 · 礼貌试探</option>
+            <option value="2">尺度 2 · 升温互动</option>
+            <option value="3">尺度 3 · 全场尖叫</option>
           </select>
           <button class="sm" id="edAdd">＋ 新增</button>
         </div>
@@ -331,7 +331,7 @@
         <h2>② 内容开关 <span class="tag">勾选要放进转盘的类别</span></h2>
         <div class="row" id="catSwitches"></div>
         <label class="chk" style="margin-top:8px"><input type="checkbox" id="adultMode" /> 限制级模式（解锁前任 / 迷恋暧昧 / 身体探索 / 亲密接触 等 spicy 内容）</label>
-        <div class="hint">开启后自动勾选限制级话题并放开「亲密接触（3 级）」；关闭则收回。</div>
+        <div class="hint">开启后自动勾选限制级话题并放开「全场尖叫（3 级）」；关闭则收回。</div>
       </div>
 
       <!-- 真心话题 -->
@@ -349,10 +349,10 @@
         <div class="row">
           <span>最大肢体接触程度：</span>
           <select id="maxContact">
-            <option value="0">0 · 无接触</option>
-            <option value="1">1 · 友好（拥抱/牵手）</option>
-            <option value="2" selected>2 · 暧昧（坐腿/喂食）</option>
-            <option value="3">3 · 限制级（需限制级模式）</option>
+            <option value="0">0 · 社牛solo（搞怪表演/声线模仿）</option>
+            <option value="1">1 · 礼貌试探（握手/击掌）</option>
+            <option value="2" selected>2 · 升温互动（拥抱/喂食）</option>
+            <option value="3">3 · 全场尖叫（贴面/耳语）</option>
           </select>
         </div>
         <div class="hint">高于所选等级、或需限制级模式的「大冒险」不会进入转盘。</div>
@@ -468,7 +468,7 @@
     }
     if (q.cat === 'dare') {
       if (q.stranger) return '陌生人互动';
-      return ['', '大冒险·无接触', '大冒险·友好', '大冒险·暧昧', '大冒险·限制级'][q.contact] || '大冒险';
+      return ['', '大冒险 ● 社牛solo', '大冒险 ● 礼貌试探', '大冒险 ● 升温互动', '大冒险 ● 全场尖叫'][q.contact] || '大冒险';
     }
     if (q.cat === 'drink') {
       if (q.combo) return '喝+一道题';

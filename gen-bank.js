@@ -269,7 +269,7 @@ const TRUTH = {
 // ============ 大冒险 Dare ============
 // 分支按 contact 等级 + stranger 聚合；target 表示对象(self/partner/stranger)，cnt 表示题量
 const DARE = {
-  c0: { label: '大冒险·无接触', contact: 0, stranger: false, target: 'self', scene: 'any', cnt: 60, sk: [
+  c0: { label: '大冒险·社牛solo', contact: 0, stranger: false, target: 'self', scene: 'any', cnt: 60, sk: [
     { t: '当场{p1}给大家看', p: { p1: ['唱一句歌', '跳段舞', '模仿一个明星', '背首诗', '学动物叫', '秀一段rap'] } },
     { t: '用{p1}的语气{p2}十秒', p: { p1: ['主持人', '新闻主播', '唐僧', '霸总', '婴儿'], p2: ['播报天气', '念广告', '读菜单'] } },
     { t: '即兴{p1}一个{p2}', p: { p1: ['编', '演', '讲'], p2: ['冷笑话', '小故事', '广告词', '土味情话'] } },
@@ -287,7 +287,7 @@ const DARE = {
     { t: '用{p1}表情{p2}拍照', p: { p1: ['最丑', '最傻', '最媚'], p2: ['自拍', '合影'] } },
     { t: '用{p1}腔调{p2}', p: { p1: ['方言', '戏精', '新闻联播'], p2: ['念一句诗', '介绍自己', '播报晚饭'] } },
   ]},
-  c1: { label: '大冒险·友好接触', contact: 1, stranger: false, target: 'partner', scene: 'any', cnt: 50, sk: [
+  c1: { label: '大冒险·礼貌试探', contact: 1, stranger: false, target: 'partner', scene: 'any', cnt: 50, sk: [
     { t: '和{p1}十指相扣{p2}秒', p: { p1: ['左边的人', '右边的人', '对面的人'], p2: ['5', '10'] } },
     { t: '给{p1}一个{p2}', p: { p1: ['左边', '右边', '旁边'], p2: ['拥抱', '额头吻', '牵手转圈'] } },
     { t: '靠在{p1}肩上{p2}秒', p: { p1: ['左边', '右边'], p2: ['10', '15'] } },
@@ -297,7 +297,7 @@ const DARE = {
     { t: '和{p1}来一个{p2}', p: { p1: ['左边', '右边'], p2: ['熊抱', '贴脸杀', '公主式握手'] } },
     { t: '和{p1}{p2}三秒', p: { p1: ['左边', '右边'], p2: ['击掌', '碰鼻', '碰杯'] } },
   ]},
-  c2: { label: '大冒险·暧昧接触', contact: 2, stranger: false, target: 'partner', scene: 'any', cnt: 45, sk: [
+  c2: { label: '大冒险·升温互动', contact: 2, stranger: false, target: 'partner', scene: 'any', cnt: 45, sk: [
     { t: '坐到{p1}腿上{p2}秒', p: { p1: ['左边', '右边'], p2: ['5', '10'] } },
     { t: '喂{p1}吃一口{p2}', p: { p1: ['左边', '右边'], p2: ['食物', '酒', '水果'] } },
     { t: '和{p1}贴脸自拍并展示', p: { p1: ['左边', '右边'] } },
@@ -307,7 +307,7 @@ const DARE = {
     { t: '和{p1}背靠背{p2}秒', p: { p1: ['左边', '右边'], p2: ['10', '15'] } },
     { t: '蒙眼让{p1}喂你一口{p2}', p: { p1: ['左边', '右边'], p2: ['食物', '酒'] } },
   ]},
-  c3: { label: '大冒险·限制级接触', contact: 3, stranger: false, target: 'partner', scene: 'any', risk: 'spicy', diff: 3, spicy: true, defaultOn: false, adultOnly: true, cnt: 40, sk: [
+  c3: { label: '大冒险·全场尖叫', contact: 3, stranger: false, target: 'partner', scene: 'any', risk: 'spicy', diff: 3, spicy: true, defaultOn: false, adultOnly: true, cnt: 40, sk: [
     { t: '和{p1}深吻{p2}秒', p: { p1: ['左边', '右边', '愿意的人'], p2: ['3', '5'] } },
     { t: '对{p1}耳语一句{p2}', p: { p1: ['左边', '右边'], p2: ['私密话', '撩人的话'] } },
     { t: '和{p1}{p2}', p: { p1: ['左边', '右边'], p2: ['舌吻', '法式热吻'] } },
