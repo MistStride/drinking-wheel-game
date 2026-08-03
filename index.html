@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>喝酒大转盘 · 可定制 + 暗箱操作</title>
+<style>
+  :root {
+    --bg: #0f1226;
+    --panel: #1a1f3a;
+    --panel-2: #232a4d;
+    --text: #eef1ff;
+    --muted: #9aa3c7;
+    --accent: #ff5a5f;
+    --line: #2f3766;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1c2350, var(--bg));
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 18px 24px 6px;
+  }
+  header h1 { margin: 0; font-size: 22px; letter-spacing: 1px; }
+  header p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+  .layout {
+    display: flex;
+    gap: 22px;
+    padding: 18px 24px 40px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .stage {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    min-width: 460px;
+  }
+  #wheel { width: 420px; height: 420px; }
+  .result {
+    width: 100%;
+    min-height: 70px;
+    border-radius: 12px;
+    padding: 12px 14px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .result .pill {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 999px;
+    color: #0f1226;
+    margin-bottom: 8px;
+  }
+  .result.placeholder { color: var(--muted); font-size: 14px; }
+  .round-info {
+    color: var(--muted);
+    font-size: 13px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .round-info b { color: var(--text); }
+
+  .panel {
+    flex: 1;
+    min-width: 320px;
+    max-width: 460px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 18px;
+  }
+  .panel h2 {
+    font-size: 15px;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel h2 .tag { font-size: 11px; color: var(--muted); font-weight: 400; }
+  .card {
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 6px 0; }
+  .row.between { justify-content: space-between; }
+  label.chk { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 14px; }
+  .sub { padding-left: 22px; color: var(--muted); font-size: 13px; }
+  select, input[type="number"], input[type="text"] {
+    background: #11152e;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  input[type="number"] { width: 64px; }
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
+  button.sm { padding: 4px 9px; font-size: 12px; }
+  .rules { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .rule {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #11152e; border: 1px solid var(--line);
+    border-radius: 8px; padding: 6px 10px; font-size: 13px;
+  }
+  .cat-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .hint { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  footer { color: var(--muted); font-size: 12px; padding: 0 24px 30px; }
+  hr.sep { border: none; border-top: 1px solid var(--line); margin: 12px 0; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🍻 喝酒大转盘 · 可定制 + 暗箱操作</h1>
+    <p>基于 lucky-canvas 构建。开关实时重建转盘；暗箱规则在「开始」时生效。请确保参与者知情且自愿，保持玩笑尺度。</p>
+  </header>
+
+  <div class="layout">
+    <!-- 左：转盘 + 结果 -->
+    <div class="stage">
+      <div id="wheel"></div>
+      <div class="round-info">
+        <span>当前轮次：<b id="roundNum">0</b></span>
+        <button class="ghost sm" id="resetRound">重置轮次</button>
+      </div>
+      <div class="result placeholder" id="result">点击转盘中央「开始」试试手气 🎯</div>
+    </div>
+
+    <!-- 右：控制面板 -->
+    <div class="panel">
+      <!-- 分类开关 -->
+      <div class="card">
+        <h2>① 内容开关 <span class="tag">勾选要放进转盘的类别</span></h2>
+        <div class="row">
+          <label class="chk"><input type="checkbox" data-cat="truth" checked /> 真心话</label>
+          <label class="chk"><input type="checkbox" data-cat="dare" checked /> 大冒险</label>
+          <label class="chk"><input type="checkbox" data-cat="drink" checked /> 直接喝</label>
+          <label class="chk"><input type="checkbox" data-cat="deeptalk" checked /> Deeptalk</label>
+        </div>
+      </div>
+
+      <!-- 真心话话题 -->
+      <div class="card">
+        <h2>② 真心话 · 话题范围</h2>
+        <div id="truthTopics" class="sub"></div>
+      </div>
+
+      <!-- 大冒险设置 -->
+      <div class="card">
+        <h2>③ 大冒险 · 尺度</h2>
+        <div class="row">
+          <label class="chk"><input type="checkbox" id="allowStranger" /> 允许「骚扰陌生人」类</label>
+        </div>
+        <div class="row">
+          <span>最大肢体接触程度：</span>
+          <select id="maxContact">
+            <option value="0">0 · 无接触</option>
+            <option value="1" selected>1 · 轻度（拥抱/牵手等）</option>
+            <option value="2">2 · 重度（亲密接触）</option>
+          </select>
+        </div>
+        <div class="hint">高于所选等级的「大冒险」不会进入转盘。</div>
+      </div>
+
+      <!-- 暗箱操作 -->
+      <div class="card">
+        <h2>④ 暗箱操作 <span class="tag">指定某次必中某类</span></h2>
+        <div class="row">
+          <span>第</span>
+          <input type="number" id="exactN" min="1" value="3" />
+          <span>次必中</span>
+          <select id="exactCat"></select>
+          <button id="addExact">添加</button>
+        </div>
+        <div class="row">
+          <span>前</span>
+          <input type="number" id="prefixK" min="1" value="2" />
+          <span>次必中</span>
+          <select id="prefixCat"></select>
+          <button id="addPrefix">添加</button>
+        </div>
+        <div class="rules" id="ruleList"></div>
+        <div class="hint">「第 N 次」只生效一次；「前 K 次」在其范围内每次都生效。轮次归零后规则可再次触发。</div>
+      </div>
+
+      <button class="ghost" id="rebuild" style="width:100%">↻ 立即按当前设置重建转盘</button>
+    </div>
+  </div>
+
+  <footer>二次开发提示：题库在 <code>CONFIG</code> 里改；概率权重改各分类 <code>weight</code>；暗箱逻辑在 <code>resolveRigging()</code>。</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/lucky-canvas@1.7.25"></script>
+  <script>
+  // ===================== 题库与分类配置 =====================
+  const CONFIG = {
+    truth: {
+      label: '真心话', color: '#ffb703', weight: 3, enabled: true,
+      topics: [
+        { id: 'hobby', label: '爱好', enabled: true, questions: [
+          '你最近迷上什么新爱好？',
+          '如果有一整天空闲，你会做什么？',
+          '你手机里最舍不得删的App是哪个？'
+        ]},
+        { id: 'childhood', label: '童年', enabled: true, questions: [
+          '童年最尴尬的一件事是什么？',
+          '小时候最想要的礼物是什么？',
+          '你小时候的绰号是什么？'
+        ]},
+        { id: 'ex', label: '前任', enabled: false, questions: [
+          '最后一段感情为什么结束？',
+          '你还偷偷关注前任的动态吗？',
+          '前任里你最对不起谁？'
+        ]},
+      ]
+    },
+    dare: {
+      label: '大冒险', color: '#ef476f', weight: 3, enabled: true,
+      allowStranger: false, maxContact: 1,
+      items: [
+        { text: '给左边的人一个真诚的赞美', contact: 0, stranger: false },
+        { text: '对右边的人说一句土味情话', contact: 0, stranger: false },
+        { text: '模仿一位在场的人，让大家猜是谁', contact: 1, stranger: false },
+        { text: '和左边的人十指相扣10秒', contact: 2, stranger: false },
+        { text: '去隔壁桌陌生人那里要一个联系方式', contact: 0, stranger: true },
+      ]
+    },
+    drink: {
+      label: '直接喝', color: '#06d6a0', weight: 2, enabled: true,
+      amounts: ['喝一口', '干杯 🍻', '罚一杯']
+    },
+    deeptalk: {
+      label: 'Deeptalk', color: '#118ab2', weight: 1, enabled: true,
+      topics: [
+        { id: 'life', label: '人生', enabled: true, questions: [
+          '你人生中最自豪的一个决定是什么？',
+          '十年后的你希望过怎样的生活？'
+        ]},
+        { id: 'fear', label: '内心', enabled: true, questions: [
+          '你最害怕失去的是什么？',
+          '此刻心里压着的一件事是什么？'
+        ]},
+      ]
+    }
+  };
+
+  // ===================== 状态 =====================
+  let segments = [];        // [{cat, catLabel, text, color}]
+  let myLucky = null;
+  let spinCount = 0;
+  let isSpinning = false;
+  let lastTarget = -1;
+  const rigging = { rules: [], usedExact: new Set() };
+
+  // ===================== 构建扇区 =====================
+  function buildSegments() {
+    segments = [];
+    const c = CONFIG;
+    if (c.truth.enabled) {
+      c.truth.topics.filter(t => t.enabled).forEach(t =>
+        t.questions.forEach(q => segments.push({ cat: 'truth', catLabel: c.truth.label, text: q, color: c.truth.color }))
+      );
+    }
+    if (c.dare.enabled) {
+      c.dare.items
+        .filter(it => (c.dare.allowStranger || !it.stranger) && it.contact <= c.dare.maxContact)
+        .forEach(it => segments.push({ cat: 'dare', catLabel: c.dare.label, text: it.text, color: c.dare.color }));
+    }
+    if (c.drink.enabled) {
+      c.drink.amounts.forEach(a => segments.push({ cat: 'drink', catLabel: c.drink.label, text: a, color: c.drink.color }));
+    }
+    if (c.deeptalk.enabled) {
+      c.deeptalk.topics.filter(t => t.enabled).forEach(t =>
+        t.questions.forEach(q => segments.push({ cat: 'deeptalk', catLabel: c.deeptalk.label, text: q, color: c.deeptalk.color }))
+      );
+    }
+    // 全关时给一个占位，避免空转盘报错
+    if (segments.length === 0) {
+      segments.push({ cat: '__none__', catLabel: '提示', text: '请至少开启一个类别', color: '#6b7280' });
+    }
+  }
+
+  function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
+
+  function buildPrizes() {
+    return segments.map((s, i) => ({
+      background: i % 2 === 0 ? s.color : shade(s.color, -18),
+      fonts: [{ text: truncate(s.text, 9), top: '40%', fontColor: '#10131f', fontSize: '12px', fontWeight: 'bold' }]
+    }));
+  }
+
+  // 颜色微调（hex 亮度）
+  function shade(hex, amt) {
+    const m = hex.replace('#', '');
+    let r = parseInt(m.slice(0, 2), 16), g = parseInt(m.slice(2, 4), 16), b = parseInt(m.slice(4, 6), 16);
+    r = Math.max(0, Math.min(255, r + amt)); g = Math.max(0, Math.min(255, g + amt)); b = Math.max(0, Math.min(255, b + amt));
+    return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('');
+  }
+
+  // ===================== 转盘渲染 =====================
+  function renderWheel() {
+    if (myLucky) {
+      myLucky.prizes = buildPrizes();
+    } else {
+      myLucky = new LuckyCanvas.LuckyWheel('#wheel', {
+        width: '420px',
+        height: '420px',
+        blocks: [{ padding: '12px', background: '#0b0e1f' }],
+        prizes: buildPrizes(),
+        buttons: [{
+          radius: '38%', background: '#ff5a5f', pointer: true,
+          fonts: [{ text: '开始', top: '-12px', fontColor: '#fff', fontSize: '16px', fontWeight: 'bold' }]
+        }],
+        start: onSpinStart
+      });
+    }
+  }
+
+  // ===================== 抽取逻辑 =====================
+  function weightedRandomIndex() {
+    const catWeights = {};
+    segments.forEach(s => { catWeights[s.cat] = (catWeights[s.cat] || 0) + CONFIG[s.cat].weight; });
+    const cats = Object.keys(catWeights);
+    const total = cats.reduce((a, c) => a + catWeights[c], 0);
+    let r = Math.random() * total, chosen = null;
+    for (const c of cats) { r -= catWeights[c]; if (r <= 0) { chosen = c; break; } }
+    if (!chosen) chosen = cats[0];
+    const pool = segments.map((s, i) => i).filter(i => segments[i].cat === chosen);
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  // 暗箱：返回强制类别 id 或 null
+  function resolveRigging(n) {
+    for (const rule of rigging.rules) {
+      if (rule.type === 'prefix' && n <= rule.count) return rule.cat;
+    }
+    for (const rule of rigging.rules) {
+      if (rule.type === 'exact' && rule.spin === n && !rigging.usedExact.has(rule.spin)) {
+        rigging.usedExact.add(rule.spin);
+        return rule.cat;
+      }
+    }
+    return null;
+  }
+
+  function onSpinStart() {
+    if (isSpinning) return;
+    const realSegs = segments.filter(s => s.cat !== '__none__');
+    if (realSegs.length === 0) { alert('请至少开启一个内容类别再开始'); return; }
+    isSpinning = true;
+    spinCount++;
+    document.getElementById('roundNum').textContent = spinCount;
+
+    const forcedCat = resolveRigging(spinCount);
+    let targetIndex;
+    if (forcedCat) {
+      const pool = segments.map((s, i) => i).filter(i => segments[i].cat === forcedCat);
+      targetIndex = pool.length ? pool[Math.floor(Math.random() * pool.length)] : weightedRandomIndex();
+    } else {
+      targetIndex = weightedRandomIndex();
+    }
+    lastTarget = targetIndex;
+
+    myLucky.play();
+    const duration = 2600 + Math.random() * 900;
+    setTimeout(() => {
+      myLucky.stop(targetIndex);
+      setTimeout(() => { showResult(targetIndex); isSpinning = false; }, 1400);
+    }, duration);
+  }
+
+  function showResult(i) {
+    const s = segments[i];
+    if (!s) return;
+    const box = document.getElementById('result');
+    box.classList.remove('placeholder');
+    box.innerHTML =
+      '<span class="pill" style="background:' + s.color + '">' + s.catLabel + '</span><br>' + s.text;
+  }
+
+  // ===================== 面板交互 =====================
+  function renderTruthTopics() {
+    const box = document.getElementById('truthTopics');
+    box.innerHTML = '';
+    CONFIG.truth.topics.forEach(t => {
+      const l = document.createElement('label');
+      l.className = 'chk';
+      l.innerHTML = '<input type="checkbox" data-topic="' + t.id + '"' + (t.enabled ? ' checked' : '') + '> ' + t.label;
+      box.appendChild(l);
+    });
+  }
+
+  function fillCatSelect(sel) {
+    sel.innerHTML = '';
+    Object.keys(CONFIG).forEach(k => {
+      const o = document.createElement('option');
+      o.value = k; o.textContent = CONFIG[k].label;
+      sel.appendChild(o);
+    });
+  }
+
+  function renderRules() {
+    const box = document.getElementById('ruleList');
+    box.innerHTML = '';
+    if (rigging.rules.length === 0) {
+      box.innerHTML = '<div class="hint">暂无暗箱规则。</div>';
+      return;
+    }
+    rigging.rules.forEach((rule, idx) => {
+      const div = document.createElement('div');
+      div.className = 'rule';
+      const desc = rule.type === 'exact'
+        ? ('第 ' + rule.spin + ' 次必中')
+        : ('前 ' + rule.count + ' 次必中');
+      div.innerHTML =
+        '<span><span class="cat-dot" style="background:' + CONFIG[rule.cat].color + '"></span>' +
+        desc + '「' + CONFIG[rule.cat].label + '」</span>';
+      const btn = document.createElement('button');
+      btn.className = 'ghost sm';
+      btn.textContent = '删除';
+      btn.onclick = () => { rigging.rules.splice(idx, 1); renderRules(); };
+      div.appendChild(btn);
+      box.appendChild(div);
+    });
+  }
+
+  function rebuild() {
+    buildSegments();
+    renderWheel();
+  }
+
+  // 绑定事件
+  document.querySelectorAll('input[data-cat]').forEach(cb => {
+    cb.addEventListener('change', e => {
+      CONFIG[e.target.dataset.cat].enabled = e.target.checked;
+      rebuild();
+    });
+  });
+  document.getElementById('truthTopics').addEventListener('change', e => {
+    if (e.target.dataset.topic) {
+      const t = CONFIG.truth.topics.find(x => x.id === e.target.dataset.topic);
+      if (t) { t.enabled = e.target.checked; rebuild(); }
+    }
+  });
+  document.getElementById('allowStranger').addEventListener('change', e => {
+    CONFIG.dare.allowStranger = e.target.checked; rebuild();
+  });
+  document.getElementById('maxContact').addEventListener('change', e => {
+    CONFIG.dare.maxContact = parseInt(e.target.value, 10); rebuild();
+  });
+  document.getElementById('rebuild').addEventListener('click', rebuild);
+  document.getElementById('resetRound').addEventListener('click', () => {
+    spinCount = 0; rigging.usedExact.clear();
+    document.getElementById('roundNum').textContent = '0';
+  });
+  document.getElementById('addExact').addEventListener('click', () => {
+    const n = parseInt(document.getElementById('exactN').value, 10);
+    const cat = document.getElementById('exactCat').value;
+    if (n > 0) { rigging.rules.push({ type: 'exact', spin: n, cat }); renderRules(); }
+  });
+  document.getElementById('addPrefix').addEventListener('click', () => {
+    const k = parseInt(document.getElementById('prefixK').value, 10);
+    const cat = document.getElementById('prefixCat').value;
+    if (k > 0) { rigging.rules.push({ type: 'prefix', count: k, cat }); renderRules(); }
+  });
+
+  // ===================== 初始化 =====================
+  renderTruthTopics();
+  fillCatSelect(document.getElementById('exactCat'));
+  fillCatSelect(document.getElementById('prefixCat'));
+  renderRules();
+  rebuild();
+  </script>
+</body>
+</html>

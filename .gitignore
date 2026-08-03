@@ -1,0 +1,7 @@
+# 生成产物（由 gen-bank.js 生成，无需入库）
+question-bank.js
+
+# 系统 / 临时文件
+*.log
+.DS_Store
+Thumbs.db
