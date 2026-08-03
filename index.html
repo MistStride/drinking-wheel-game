@@ -543,7 +543,7 @@
     if (branches.length === 0) return empty;
     return branches.map((b, i) => ({
       background: i % 2 === 0 ? CAT_META[b.cat].color : shade(CAT_META[b.cat].color, -18),
-      fonts: [{ text: truncate(b.label + '(' + b.count + ')', 11), top: '40%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold' }]
+      fonts: [{ text: truncate(b.label, 14), top: '40%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold' }]
     }));
   }
 
