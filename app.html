@@ -227,15 +227,10 @@
           <div class="ed-block-title">🔍 筛选 / 搜索</div>
           <div class="ed-toolbar">
             <select id="edCat"><option value="all">全部分类</option></select>
-            <select id="edTopic"><option value="all">全部话题范围</option></select>
-            <span class="sub" style="padding-left:0">尺度</span>
-            <select id="edLevel" title="大冒险尺度分级（0 社牛solo / 1 礼貌试探 / 2 升温互动 / 3 全场尖叫·需限制级模式）">
-              <option value="all">全部尺度</option>
-              <option value="0">0 · 社牛solo（表情包模仿/霸总台词）</option>
-              <option value="1">1 · 礼貌试探（握手/击掌）</option>
-              <option value="2">2 · 升温互动（拥抱/喂食）</option>
-              <option value="3">3 · 全场尖叫（贴面/耳语）</option>
-            </select>
+            <span id="edRefineRow" style="display:inline-flex;gap:8px;align-items:center">
+              <span class="sub" id="edRefineLabel" style="padding-left:0">细分</span>
+              <select id="edRefine"><option value="all">全部</option></select>
+            </span>
           </div>
           <div class="ed-toolbar">
             <input type="text" id="edSearch" placeholder="搜索题干…" class="wide" style="flex:1;min-width:140px" />
@@ -806,7 +801,7 @@
     const sel = document.getElementById('edCat'); fillCatSelect(sel, true);
     const nc = document.getElementById('edNewCat'); fillCatSelect(nc, false);
     updateEdNewTopic();
-    updateEdTopicFilter();
+    updateEdRefineFilter();
   }
   function updateEdNewTopic() {
     const cat = document.getElementById('edNewCat').value;
@@ -818,26 +813,37 @@
     if (cat === 'dare') { nl.disabled = false; }
     else { nl.disabled = true; nl.value = '0'; }
   }
-  // 编辑器二级话题筛选下拉：根据所选主分类填充（仅 truth/deeptalk 有话题范围）
-  function updateEdTopicFilter() {
+  // 编辑器二级筛选下拉：根据所选主分类，动态显示「话题范围」(真心话/Deeptalk) 或「尺度」(大冒险)，其余分类隐藏
+  function updateEdRefineFilter() {
     const cat = document.getElementById('edCat').value;
-    const sel = document.getElementById('edTopic'); sel.innerHTML = '';
-    const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = '全部话题范围'; sel.appendChild(o0);
-    topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; sel.appendChild(o); });
-    const lvlSel = document.getElementById('edLevel');
-    if (cat === 'dare' || cat === 'all') { lvlSel.disabled = false; }
-    else { lvlSel.disabled = true; lvlSel.value = 'all'; }
+    const label = document.getElementById('edRefineLabel');
+    const row = document.getElementById('edRefineRow');
+    const sel = document.getElementById('edRefine'); sel.innerHTML = '';
+    const isTopic = (cat === 'truth' || cat === 'deeptalk');
+    const isDare = (cat === 'dare');
+    if (!isTopic && !isDare) { row.style.display = 'none'; sel.innerHTML = '<option value="all">全部</option>'; return; }
+    row.style.display = '';
+    if (isTopic) {
+      label.textContent = '话题范围';
+      const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = '全部话题范围'; sel.appendChild(o0);
+      topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; sel.appendChild(o); });
+    } else {
+      label.textContent = '尺度';
+      const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = '全部尺度'; sel.appendChild(o0);
+      ['0 · 社牛solo（表情包模仿/霸总台词）', '1 · 礼貌试探（握手/击掌）', '2 · 升温互动（拥抱/喂食）', '3 · 全场尖叫（贴面/耳语）'].forEach((t, i) => { const o = document.createElement('option'); o.value = String(i); o.textContent = t; sel.appendChild(o); });
+    }
   }
 
   function renderEditor() {
     const cat = document.getElementById('edCat').value;
-    const topic = document.getElementById('edTopic').value;
+    const refine = document.getElementById('edRefine').value;
     const kw = document.getElementById('edSearch').value.trim().toLowerCase();
     const body = document.getElementById('edBody'); body.innerHTML = '';
     let list = QB.questions.filter(q => cat === 'all' || q.cat === cat);
-    if (topic !== 'all') list = list.filter(q => q.topic === topic);
-    const lvl = document.getElementById('edLevel').value;
-    if (lvl !== 'all') list = list.filter(q => String(q.contact) === lvl);
+    if (refine !== 'all') {
+      if (cat === 'dare') list = list.filter(q => String(q.contact) === refine);
+      else list = list.filter(q => q.topic === refine);
+    }
     if (kw) list = list.filter(q => (q.text || '').toLowerCase().includes(kw));
     if (list.length > 400) {
       const note = document.createElement('tr'); note.innerHTML = '<td colspan="4" class="hint" style="padding:8px">匹配 ' + list.length + ' 题，仅显示前 400；用搜索缩小范围。</td>';
@@ -1084,9 +1090,8 @@
   document.getElementById('fileInputCsv').addEventListener('change', e => { if (e.target.files[0]) doImportCsv(e.target.files[0]); e.target.value = ''; });
   document.getElementById('edRefresh').addEventListener('click', renderEditor);
   document.getElementById('edSearch').addEventListener('input', renderEditor);
-  document.getElementById('edCat').addEventListener('change', () => { updateEdTopicFilter(); renderEditor(); });
-  document.getElementById('edTopic').addEventListener('change', renderEditor);
-  document.getElementById('edLevel').addEventListener('change', renderEditor);
+  document.getElementById('edCat').addEventListener('change', () => { updateEdRefineFilter(); renderEditor(); });
+  document.getElementById('edRefine').addEventListener('change', renderEditor);
   document.getElementById('edNewCat').addEventListener('change', updateEdNewTopic);
   document.getElementById('edAdd').addEventListener('click', () => {
     const text = document.getElementById('edNewText').value.trim();
