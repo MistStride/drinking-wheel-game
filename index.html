@@ -652,23 +652,28 @@
       return;
     }
 
-    // 默认：按各类别在生效题中的占比分配名额
+    // 默认：按各类别在生效题中的占比分配名额，且保证每类至少 1 道（总数不足时自动补足，避免某类为 0）
     const remaining = Math.max(0, qSampleN - forced.length);
     const byCat = {};
     active.forEach(q => { (byCat[q.cat] = byCat[q.cat] || []).push(q); });
+    const cats = Object.keys(byCat);
     const totalActive = active.length || 1;
+    const numCats = cats.length;
+    const effRemaining = Math.max(remaining, numCats);  // 至少给每类留 1 个名额
     const alloc = {};
+    cats.forEach(cat => { alloc[cat] = 1; });            // 第一遍：每类保底 1
+    let pool = effRemaining - numCats;
     let assigned = 0;
-    Object.keys(byCat).forEach(cat => {
-      const n = Math.floor(remaining * byCat[cat].length / totalActive);
-      alloc[cat] = n; assigned += n;
+    cats.forEach(cat => {
+      const n = Math.floor(pool * byCat[cat].length / totalActive);
+      alloc[cat] += n; assigned += n;
     });
-    let rem = remaining - assigned;            // 余数轮转补齐
-    const cats = Object.keys(byCat); let ci = 0;
-    while (rem-- > 0) { alloc[cats[ci % cats.length]]++; ci++; }
+    let rem = pool - assigned;                          // 余数轮转补齐
+    let ci = 0;
+    while (rem-- > 0) { alloc[cats[ci % numCats]]++; ci++; }
     // 每类内随机抽样（排除已强制的）
     const sampled = [];
-    Object.keys(byCat).forEach(cat => {
+    cats.forEach(cat => {
       const arr = shuffle(byCat[cat].filter(q => !forcedIds.has(q.id)));
       sampled.push(...arr.slice(0, alloc[cat] || 0));
     });
