@@ -213,6 +213,16 @@
   .guide-dl:hover { transform: translateY(-2px); }
   .guide-close-x { position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--pink); background: #fff; color: var(--pink-deep); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .guide-close-x:hover { background: var(--tint); transform: rotate(90deg); }
+  /* 自定义抽题比例弹窗 */
+  .quota-row { display: flex; align-items: center; gap: 10px; padding: 9px 2px; border-bottom: 1px dashed var(--line); }
+  .quota-row .ql { flex: 0 0 34%; font-size: 13px; color: var(--text); }
+  .quota-row .qn { flex: 1 1 auto; -webkit-appearance: none; appearance: none; height: 8px; border-radius: 6px; background: var(--tint); outline: none; cursor: pointer; }
+  .quota-row .qn::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--pink); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(236,64,122,.4); cursor: pointer; }
+  .quota-row .qn::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--pink); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(236,64,122,.4); cursor: pointer; }
+  .quota-row .qv { flex: 0 0 34px; text-align: center; font-family: "Nunito",sans-serif; font-weight: 800; font-size: 14px; color: var(--pink-deep); background: var(--tint); border-radius: 10px; padding: 2px 0; }
+  .quota-row .qmax { flex: 0 0 56px; font-size: 12px; color: var(--muted); text-align: right; }
+  .quota-total { margin-top: 10px; font-size: 13px; color: var(--pink-deep); font-weight: 800; }
+  .quota-actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 </style>
 </head>
 <body>
@@ -370,6 +380,23 @@
     </div>
   </div>
 
+  <!-- 自定义抽题比例弹窗 -->
+  <div class="guide-overlay" id="quotaOverlay">
+    <div class="guide-modal">
+      <button class="guide-close-x" id="quotaClose" aria-label="关闭">✕</button>
+      <h3>⚖️ 自定义抽题比例</h3>
+      <p>「按题目」模式下，可为每个二级分支单独设定放进转盘的题目数量（不超过右侧上限）。留空或 0 表示不放该类。</p>
+      <div id="quotaList"></div>
+      <div class="quota-total" id="quotaTotal">合计 0 道</div>
+      <div class="quota-actions">
+        <button class="sm" id="quotaApplyProp">等比铺满</button>
+        <button class="sm ghost" id="quotaReset">全体清零</button>
+        <button class="guide-dl" id="quotaSave" style="margin-top:0">✓ 保存并应用</button>
+        <button class="sm ghost" id="quotaCancel">取消</button>
+      </div>
+    </div>
+  </div>
+
   <header>
     <h1>🍻 来一口大转盘</h1>
     <p id="subtitle">转盘一转，今晚的玩法交给运气——真心话、大冒险、直接喝，还是 Deeptalk？</p>
@@ -396,6 +423,7 @@
           <label class="chk"><input type="radio" name="wheelMode" value="branch" checked /> 按类型（分支）</label>
           <label class="chk"><input type="radio" name="wheelMode" value="question" /> 按题目</label>
           <span class="sub" style="padding-left:0">抽 <input type="number" id="qSampleN" min="1" max="1000" value="50" style="width:60px" /> 道（仅「按题目」生效，按类别比例随机抽）</span>
+          <button class="sm ghost" id="btnQuota" style="display:none">⚖️ 自定义比例</button>
         </div>
         <div class="row" style="margin-top:6px">
           <label class="chk"><input type="checkbox" id="allowRepeat" /> 允许重复抽取（不勾则抽中后该题移出转盘，不会再次抽中）</label>
@@ -506,6 +534,7 @@
   let qidToIndex = new Map();
   let wheelMode = 'branch'; // 'branch' | 'question'
   let qSampleN = 50;        // 按题目模式：随机抽多少道（按类别比例）
+  let manualQuota = {};     // 按题目模式：二级分支自定义配额 { 'cat::sub': 数量 }，空=按默认比例
   let allowRepeat = false;  // 是否允许重复抽中（false 则抽中后该题移出转盘）
   let drawnIds = new Set(); // 已抽中且不再出现的题目 id
   let pendingResult = null; // 旋转结束后才展示的结果
@@ -568,17 +597,61 @@
     branches = [...map.values()];
   }
 
-  // 按题目模式：从生效题里随机抽 qSampleN 道（按类别比例分配）；精准暗箱命中的题强制入样
+  // 二级分支枚举：列出当前生效、且题库有题的二级分支（含各自上限）
+  function levelLabelOf(a) { return ({ sip: '最温和·趣味喝法', glass: '喝一杯', chug: '罚酒干杯（最猛）' })[a] || a; }
+  function enumerateBranches() {
+    const inWheel = q => isActive(q) && (allowRepeat || !drawnIds.has(q.id));
+    const list = [];
+    ['truth', 'deeptalk'].forEach(cat => {
+      (QB.topics[cat] || []).forEach(t => {
+        if (settings[cat + 'Topics'][t.id] === false) return;
+        const max = QB.questions.filter(q => q.cat === cat && q.topic === t.id && inWheel(q)).length;
+        if (max > 0) list.push({ key: cat + '::' + t.id, cat, sub: t.id, label: CAT_META[cat].label + ' · ' + t.label, max });
+      });
+    });
+    [0, 1, 2, 3].forEach(c => {
+      const max = QB.questions.filter(q => q.cat === 'dare' && q.contact === c && inWheel(q)).length;
+      if (max > 0) list.push({ key: 'dare::' + c, cat: 'dare', sub: String(c), label: '大冒险 · 尺度' + c, max });
+    });
+    ['sip', 'glass', 'chug'].forEach(a => {
+      const max = QB.questions.filter(q => q.cat === 'drink' && q.amount === a && inWheel(q)).length;
+      if (max > 0) list.push({ key: 'drink::' + a, cat: 'drink', sub: a, label: '直接喝 · ' + levelLabelOf(a), max });
+    });
+    return list;
+  }
+  function matchSub(q, b) {
+    if (b.cat === 'truth' || b.cat === 'deeptalk') return q.topic === b.sub;
+    if (b.cat === 'dare') return q.contact === Number(b.sub);
+    if (b.cat === 'drink') return q.amount === b.sub;
+    return false;
+  }
+  // 按题目模式：默认按类别比例抽 qSampleN 道；若设了 manualQuota 则按二级分支配额抽（不超过上限）
   function buildQuestionSegs() {
     const active = QB.questions.filter(q => isActive(q) && (allowRepeat || !drawnIds.has(q.id)));
-    // 1) 精准暗箱引用的题强制入样，保证能停到它
+    // 精准暗箱引用的题强制入样，保证能停到它
     const forcedIds = new Set();
     rigging.rules.forEach(r => {
       if ((r.type === 'exactQ' || r.type === 'prefixQ') && QB.questions.some(q => q.id === r.qid && isActive(q))) forcedIds.add(r.qid);
     });
     const forced = active.filter(q => forcedIds.has(q.id));
+
+    // 手动配额模式：按二级分支配额抽样（每个分支不超过其上限）
+    if (Object.keys(manualQuota).length > 0) {
+      const branchesEnum = enumerateBranches();
+      const sampled = [];
+      branchesEnum.forEach(b => {
+        const n = Math.max(0, Math.min(manualQuota[b.key] || 0, b.max));
+        const arr = shuffle(active.filter(q => !forcedIds.has(q.id) && matchSub(q, b)));
+        sampled.push(...arr.slice(0, n));
+      });
+      qSegs = shuffle(forced.concat(sampled));
+      qidToIndex = new Map();
+      qSegs.forEach((q, i) => qidToIndex.set(q.id, i));
+      return;
+    }
+
+    // 默认：按各类别在生效题中的占比分配名额
     const remaining = Math.max(0, qSampleN - forced.length);
-    // 2) 按各类别在生效题中的占比分配名额
     const byCat = {};
     active.forEach(q => { (byCat[q.cat] = byCat[q.cat] || []).push(q); });
     const totalActive = active.length || 1;
@@ -591,7 +664,7 @@
     let rem = remaining - assigned;            // 余数轮转补齐
     const cats = Object.keys(byCat); let ci = 0;
     while (rem-- > 0) { alloc[cats[ci % cats.length]]++; ci++; }
-    // 3) 每类内随机抽样（排除已强制的）
+    // 每类内随机抽样（排除已强制的）
     const sampled = [];
     Object.keys(byCat).forEach(cat => {
       const arr = shuffle(byCat[cat].filter(q => !forcedIds.has(q.id)));
@@ -1175,6 +1248,7 @@
       const hint = document.getElementById('wheelModeHint');
       if (wheelMode === 'question') hint.textContent = '当前「按题目」：已按类别比例从生效题随机抽 ' + qSampleN + ' 道放进转盘，停下直接显示该题原文。';
       else hint.textContent = '当前「按类型」：每格代表一个类别，停下后在该类内随机抽一题。';
+      document.getElementById('btnQuota').style.display = (wheelMode === 'question') ? '' : 'none';
       rebuild();
     }
   }));
@@ -1280,6 +1354,56 @@
     QB.questions.push(q);
     document.getElementById('edNewText').value = '';
     renderEditor(); rebuild();
+  });
+
+  // ===================== 自定义抽题比例弹窗 =====================
+  const quotaOverlay = document.getElementById('quotaOverlay');
+  function updateQuotaTotal() {
+    let total = 0;
+    quotaOverlay.querySelectorAll('.qn').forEach(inp => { const max = parseInt(inp.max, 10); let v = parseInt(inp.value, 10); if (isNaN(v) || v < 0) v = 0; if (v > max) v = max; total += v; });
+    document.getElementById('quotaTotal').textContent = '合计 ' + total + ' 道';
+  }
+  function renderQuotaModal() {
+    const branchesEnum = enumerateBranches();
+    const box = document.getElementById('quotaList'); box.innerHTML = '';
+    if (branchesEnum.length === 0) { box.innerHTML = '<p class="sub" style="padding:8px 0">当前没有可用的二级分支，请先在上方开启对应分类。</p>'; updateQuotaTotal(); return; }
+    branchesEnum.forEach(b => {
+      const cur = Math.min(manualQuota[b.key] || 0, b.max);
+      const row = document.createElement('div'); row.className = 'quota-row';
+      const lbl = document.createElement('span'); lbl.className = 'ql'; lbl.textContent = b.label;
+      const inp = document.createElement('input'); inp.type = 'range'; inp.className = 'qn'; inp.min = '0'; inp.max = String(b.max); inp.step = '1'; inp.value = String(cur); inp.dataset.key = b.key;
+      const qv = document.createElement('span'); qv.className = 'qv'; qv.textContent = String(cur);
+      const mx = document.createElement('span'); mx.className = 'qmax'; mx.textContent = '上限 ' + b.max;
+      inp.addEventListener('input', () => { qv.textContent = inp.value; });
+      row.appendChild(lbl); row.appendChild(inp); row.appendChild(qv); row.appendChild(mx); box.appendChild(row);
+    });
+    updateQuotaTotal();
+  }
+  function openQuotaModal() { renderQuotaModal(); quotaOverlay.classList.add('show'); }
+  function applyProportionalQuota() {
+    const branchesEnum = enumerateBranches();
+    const totalMax = branchesEnum.reduce((a, b) => a + b.max, 0) || 1;
+    const target = qSampleN;
+    const nb = {};
+    branchesEnum.forEach(b => { nb[b.key] = Math.min(Math.floor(target * b.max / totalMax), b.max); });
+    let sum = branchesEnum.reduce((a, b) => a + (nb[b.key] || 0), 0);
+    let rem = target - sum, i = 0;
+    while (rem > 0 && branchesEnum.length) { const b = branchesEnum[i % branchesEnum.length]; if ((nb[b.key] || 0) < b.max) { nb[b.key]++; rem--; } i++; if (i > branchesEnum.length * (target + 1)) break; }
+    manualQuota = nb;
+  }
+  document.getElementById('btnQuota').addEventListener('click', openQuotaModal);
+  document.getElementById('quotaClose').addEventListener('click', () => quotaOverlay.classList.remove('show'));
+  quotaOverlay.addEventListener('click', e => { if (e.target === quotaOverlay) quotaOverlay.classList.remove('show'); });
+  document.getElementById('quotaCancel').addEventListener('click', () => quotaOverlay.classList.remove('show'));
+  document.getElementById('quotaReset').addEventListener('click', () => { manualQuota = {}; renderQuotaModal(); document.getElementById('btnQuota').textContent = '⚖️ 自定义比例'; });
+  document.getElementById('quotaApplyProp').addEventListener('click', () => { applyProportionalQuota(); renderQuotaModal(); });
+  quotaOverlay.addEventListener('input', e => { if (e.target.classList.contains('qn')) { const max = parseInt(e.target.max, 10); let v = parseInt(e.target.value, 10); if (isNaN(v) || v < 0) v = 0; if (v > max) e.target.value = max; updateQuotaTotal(); } });
+  document.getElementById('quotaSave').addEventListener('click', () => {
+    const inputs = quotaOverlay.querySelectorAll('.qn'); const nb = {};
+    inputs.forEach(inp => { const key = inp.dataset.key; const max = parseInt(inp.max, 10); let v = parseInt(inp.value, 10); if (isNaN(v) || v < 0) v = 0; nb[key] = Math.min(v, max); });
+    manualQuota = nb;
+    document.getElementById('btnQuota').textContent = '⚖️ 自定义比例 ✓';
+    quotaOverlay.classList.remove('show'); rebuild();
   });
 
   // ===================== 初始化 =====================
