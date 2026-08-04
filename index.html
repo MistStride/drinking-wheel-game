@@ -621,6 +621,12 @@
     });
     return list;
   }
+  // 类目优先级：大冒险 > 真心话 > 直接喝 > deeptalk（总数偏小时按此顺序优先填充）
+  const CAT_PRIORITY = { dare: 0, truth: 1, drink: 2, deeptalk: 3 };
+  function branchPriority(b) { return CAT_PRIORITY[b.cat] != null ? CAT_PRIORITY[b.cat] : 9; }
+  function priorityOrder(branches) {
+    return branches.slice().sort((a, b) => branchPriority(a) - branchPriority(b) || b.max - a.max);
+  }
   function matchSub(q, b) {
     if (b.cat === 'truth' || b.cat === 'deeptalk') return q.topic === b.sub;
     if (b.cat === 'dare') return q.contact === Number(b.sub);
@@ -658,11 +664,12 @@
     const numSub = branchesEnum.length;                  // 二级分类数量（均有题）
     const remaining = Math.max(0, total - forced.length); // 暗箱占用后剩余可分配名额
     const totalActive = active.length || 1;
+    const order = priorityOrder(branchesEnum);
     const alloc = {};
     branchesEnum.forEach(b => { alloc[b.key] = 0; });
 
     if (remaining >= numSub) {
-      // 总数(扣除暗箱后) ≥ 二级分类数：先给每个二级分类保底 1 道，再从剩余名额按分支题量比例补
+      // 总数(扣除暗箱后) ≥ 二级分类数：先给每个二级分类保底 1 道，再从剩余名额按分支题量比例补（余数按优先级补齐）
       branchesEnum.forEach(b => { alloc[b.key] = 1; });
       const pool = remaining - numSub;
       let assigned = 0;
@@ -670,19 +677,17 @@
         const n = Math.floor(pool * b.max / totalActive);
         alloc[b.key] += n; assigned += n;
       });
-      let rem = pool - assigned;                        // 余数轮转补齐
+      let rem = pool - assigned;                        // 余数按类目优先级轮转补齐（大冒险优先）
       let ci = 0;
-      while (rem-- > 0) { alloc[branchesEnum[ci % numSub].key]++; ci++; }
+      while (rem-- > 0) { alloc[order[ci % numSub].key]++; ci++; }
     } else {
-      // 总数 < 二级分类数：不保底，直接按比例铺满总数即可（不补更多题）
-      let assigned = 0;
-      branchesEnum.forEach(b => {
-        const n = Math.floor(remaining * b.max / totalActive);
-        alloc[b.key] = n; assigned += n;
-      });
-      let rem = remaining - assigned;                   // 余数轮转补齐
-      let ci = 0;
-      while (rem-- > 0) { alloc[branchesEnum[ci % numSub].key]++; ci++; }
+      // 总数 < 二级分类数：按类目优先级每分支最多 1 道铺满总数（优先大冒险→真心话→直接喝→deeptalk）
+      let r = remaining;
+      for (const b of order) {
+        if (r <= 0) break;
+        const give = Math.min(r, 1, b.max);
+        alloc[b.key] = give; r -= give;
+      }
     }
     // 每个二级分支内随机抽样（排除已强制的题），并自然夹紧到该分支上限
     const sampled = [];
@@ -1406,24 +1411,26 @@
     const numSub = branchesEnum.length;                 // 二级分类数量（均有题）
     const totalMax = branchesEnum.reduce((a, b) => a + b.max, 0) || 1;
     const target = qSampleN;                            // 用户设定的总题数
+    const order = priorityOrder(branchesEnum);
     const nb = {};
     branchesEnum.forEach(b => { nb[b.key] = 0; });
     if (target >= numSub) {
-      // 总数 ≥ 二级分类数：先给每个二级分类保底 1 道，再从剩余名额按分支题量比例补
+      // 总数 ≥ 二级分类数：先给每个二级分类保底 1 道，再从剩余名额按分支题量比例补（余数按优先级补齐）
       branchesEnum.forEach(b => { nb[b.key] = 1; });
       const pool = target - numSub;
       let assigned = 0;
       branchesEnum.forEach(b => { const n = Math.floor(pool * b.max / totalMax); nb[b.key] += n; assigned += n; });
-      let rem = pool - assigned;                        // 余数轮转补齐
+      let rem = pool - assigned;                        // 余数按类目优先级轮转补齐（大冒险优先）
       let ci = 0;
-      while (rem-- > 0) { nb[branchesEnum[ci % numSub].key]++; ci++; }
+      while (rem-- > 0) { nb[order[ci % numSub].key]++; ci++; }
     } else {
-      // 总数 < 二级分类数：不保底，直接按上限占比铺满总数即可（不补更多题）
-      let assigned = 0;
-      branchesEnum.forEach(b => { const n = Math.floor(target * b.max / totalMax); nb[b.key] = n; assigned += n; });
-      let rem = target - assigned;
-      let ci = 0;
-      while (rem-- > 0) { nb[branchesEnum[ci % numSub].key]++; ci++; }
+      // 总数 < 二级分类数：按类目优先级每分支最多 1 道铺满总数（优先大冒险→真心话→直接喝→deeptalk）
+      let r = target;
+      for (const b of order) {
+        if (r <= 0) break;
+        const give = Math.min(r, 1, b.max);
+        nb[b.key] = give; r -= give;
+      }
     }
     manualQuota = nb;
   }
