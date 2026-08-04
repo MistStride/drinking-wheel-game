@@ -420,8 +420,8 @@
         <h2>① 转盘抽取 <span class="tag">选择抽题方式</span></h2>
         <div class="row" style="margin-top:8px">
           <span>抽取模式：</span>
-          <label class="chk"><input type="radio" name="wheelMode" value="branch" checked /> 按类型（分支）</label>
-          <label class="chk"><input type="radio" name="wheelMode" value="question" /> 按题目</label>
+          <label class="chk"><input type="radio" name="wheelMode" value="branch" /> 按类型（分支）</label>
+          <label class="chk"><input type="radio" name="wheelMode" value="question" checked /> 按题目</label>
           <span class="sub" style="padding-left:0">抽 <input type="number" id="qSampleN" min="1" max="1000" value="50" style="width:60px" /> 道（仅「按题目」生效，按类别比例随机抽）</span>
           <button class="sm ghost" id="btnQuota" style="display:none">⚖️ 自定义比例</button>
         </div>
@@ -429,7 +429,7 @@
           <label class="chk"><input type="checkbox" id="allowRepeat" /> 允许重复抽取（不勾则抽中后该题移出转盘，不会再次抽中）</label>
           <button class="sm ghost" id="resetDrawn">↺ 重置已抽</button>
         </div>
-        <div class="hint" id="wheelModeHint">「按类型」：每格代表一个类别，停下后在该类内随机抽一题；「按题目」：按类别比例从生效题随机抽若干道放进转盘，停下直接显示该题原文。</div>
+        <div class="hint" id="wheelModeHint">「按题目」：已按类别比例从生效题随机抽若干道放进转盘，停下直接显示该题原文；「按类型」：每格代表一个类别，停下后在该类内随机抽一题。</div>
       </div>
 
       <!-- 分类开关 -->
@@ -534,7 +534,7 @@
   let branches = [];        // [{key,label,cat,count,questions:[]}]
   let qSegs = [];           // 按题目模式：生效的每道题目（数组，下标即扇区）
   let qidToIndex = new Map();
-  let wheelMode = 'branch'; // 'branch' | 'question'
+  let wheelMode = 'question'; // 'branch' | 'question'
   let qSampleN = 50;        // 按题目模式：随机抽多少道（按类别比例）
   let manualQuota = {};     // 按题目模式：二级分支自定义配额 { 'cat::sub': 数量 }，空=按默认比例
   let allowRepeat = false;  // 是否允许重复抽中（false 则抽中后该题移出转盘）
