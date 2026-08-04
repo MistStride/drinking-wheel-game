@@ -422,7 +422,7 @@
           <span>抽取模式：</span>
           <label class="chk"><input type="radio" name="wheelMode" value="branch" /> 按类型（分支）</label>
           <label class="chk"><input type="radio" name="wheelMode" value="question" checked /> 按题目</label>
-          <span class="sub" style="padding-left:0">抽 <input type="number" id="qSampleN" min="1" max="1000" value="50" style="width:60px" /> 道（仅「按题目」生效，按类别比例随机抽）</span>
+          <span class="sub" id="qSampleRow" style="padding-left:0">抽 <input type="number" id="qSampleN" min="1" max="1000" value="50" style="width:60px" /> 道（默认按类别比例随机抽）</span>
           <button class="sm ghost" id="btnQuota" style="display:none">⚖️ 自定义比例</button>
         </div>
         <div class="row" style="margin-top:6px">
@@ -1269,6 +1269,7 @@
       if (wheelMode === 'question') hint.textContent = '当前「按题目」：已按类别比例从生效题随机抽 ' + qSampleN + ' 道放进转盘，停下直接显示该题原文。';
       else hint.textContent = '当前「按类型」：每格代表一个类别，停下后在该类内随机抽一题。';
       document.getElementById('btnQuota').style.display = (wheelMode === 'question') ? '' : 'none';
+      document.getElementById('qSampleRow').style.display = (wheelMode === 'question') ? '' : 'none';
       rebuild();
     }
   }));
@@ -1402,13 +1403,28 @@
   function openQuotaModal() { renderQuotaModal(); quotaOverlay.classList.add('show'); }
   function applyProportionalQuota() {
     const branchesEnum = enumerateBranches();
+    const numSub = branchesEnum.length;                 // 二级分类数量（均有题）
     const totalMax = branchesEnum.reduce((a, b) => a + b.max, 0) || 1;
-    const target = qSampleN;
+    const target = qSampleN;                            // 用户设定的总题数
     const nb = {};
-    branchesEnum.forEach(b => { nb[b.key] = Math.min(Math.floor(target * b.max / totalMax), b.max); });
-    let sum = branchesEnum.reduce((a, b) => a + (nb[b.key] || 0), 0);
-    let rem = target - sum, i = 0;
-    while (rem > 0 && branchesEnum.length) { const b = branchesEnum[i % branchesEnum.length]; if ((nb[b.key] || 0) < b.max) { nb[b.key]++; rem--; } i++; if (i > branchesEnum.length * (target + 1)) break; }
+    branchesEnum.forEach(b => { nb[b.key] = 0; });
+    if (target >= numSub) {
+      // 总数 ≥ 二级分类数：先给每个二级分类保底 1 道，再从剩余名额按分支题量比例补
+      branchesEnum.forEach(b => { nb[b.key] = 1; });
+      const pool = target - numSub;
+      let assigned = 0;
+      branchesEnum.forEach(b => { const n = Math.floor(pool * b.max / totalMax); nb[b.key] += n; assigned += n; });
+      let rem = pool - assigned;                        // 余数轮转补齐
+      let ci = 0;
+      while (rem-- > 0) { nb[branchesEnum[ci % numSub].key]++; ci++; }
+    } else {
+      // 总数 < 二级分类数：不保底，直接按上限占比铺满总数即可（不补更多题）
+      let assigned = 0;
+      branchesEnum.forEach(b => { const n = Math.floor(target * b.max / totalMax); nb[b.key] = n; assigned += n; });
+      let rem = target - assigned;
+      let ci = 0;
+      while (rem-- > 0) { nb[branchesEnum[ci % numSub].key]++; ci++; }
+    }
     manualQuota = nb;
   }
   document.getElementById('btnQuota').addEventListener('click', openQuotaModal);
@@ -1422,6 +1438,9 @@
     const inputs = quotaOverlay.querySelectorAll('.qn'); const nb = {};
     inputs.forEach(inp => { const key = inp.dataset.key; const max = parseInt(inp.max, 10); let v = parseInt(inp.value, 10); if (isNaN(v) || v < 0) v = 0; nb[key] = Math.min(v, max); });
     manualQuota = nb;
+    // 自定义比例改变了总题数：同步主页面「抽 X 道」
+    const total = Object.keys(nb).reduce((a, k) => a + (nb[k] || 0), 0);
+    if (total >= 1) { qSampleN = total; const qn = document.getElementById('qSampleN'); if (qn) qn.value = total; }
     document.getElementById('btnQuota').textContent = '⚖️ 自定义比例 ✓';
     quotaOverlay.classList.remove('show'); rebuild();
   });
@@ -1438,6 +1457,7 @@
   renderEditor();
   // 初始根据默认抽题模式显示「自定义比例」按钮（默认按题目，故显示）
   document.getElementById('btnQuota').style.display = (wheelMode === 'question') ? '' : 'none';
+  document.getElementById('qSampleRow').style.display = (wheelMode === 'question') ? '' : 'none';
   rebuild();
   </script>
 </body>
