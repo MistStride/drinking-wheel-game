@@ -652,30 +652,43 @@
       return;
     }
 
-    // 默认：按各类别在生效题中的占比分配名额，且保证每类至少 1 道（总数不足时自动补足，避免某类为 0）
-    const remaining = Math.max(0, qSampleN - forced.length);
-    const byCat = {};
-    active.forEach(q => { (byCat[q.cat] = byCat[q.cat] || []).push(q); });
-    const cats = Object.keys(byCat);
+    // 默认：按二级分支（细分到话题范围/尺度/量级）在生效题中的占比分配名额
+    const total = qSampleN;                              // 用户设定的总题数
+    const branchesEnum = enumerateBranches();
+    const numSub = branchesEnum.length;                  // 二级分类数量（均有题）
+    const remaining = Math.max(0, total - forced.length); // 暗箱占用后剩余可分配名额
     const totalActive = active.length || 1;
-    const numCats = cats.length;
-    const effRemaining = Math.max(remaining, numCats);  // 至少给每类留 1 个名额
     const alloc = {};
-    cats.forEach(cat => { alloc[cat] = 1; });            // 第一遍：每类保底 1
-    let pool = effRemaining - numCats;
-    let assigned = 0;
-    cats.forEach(cat => {
-      const n = Math.floor(pool * byCat[cat].length / totalActive);
-      alloc[cat] += n; assigned += n;
-    });
-    let rem = pool - assigned;                          // 余数轮转补齐
-    let ci = 0;
-    while (rem-- > 0) { alloc[cats[ci % numCats]]++; ci++; }
-    // 每类内随机抽样（排除已强制的）
+    branchesEnum.forEach(b => { alloc[b.key] = 0; });
+
+    if (remaining >= numSub) {
+      // 总数(扣除暗箱后) ≥ 二级分类数：先给每个二级分类保底 1 道，再从剩余名额按分支题量比例补
+      branchesEnum.forEach(b => { alloc[b.key] = 1; });
+      const pool = remaining - numSub;
+      let assigned = 0;
+      branchesEnum.forEach(b => {
+        const n = Math.floor(pool * b.max / totalActive);
+        alloc[b.key] += n; assigned += n;
+      });
+      let rem = pool - assigned;                        // 余数轮转补齐
+      let ci = 0;
+      while (rem-- > 0) { alloc[branchesEnum[ci % numSub].key]++; ci++; }
+    } else {
+      // 总数 < 二级分类数：不保底，直接按比例铺满总数即可（不补更多题）
+      let assigned = 0;
+      branchesEnum.forEach(b => {
+        const n = Math.floor(remaining * b.max / totalActive);
+        alloc[b.key] = n; assigned += n;
+      });
+      let rem = remaining - assigned;                   // 余数轮转补齐
+      let ci = 0;
+      while (rem-- > 0) { alloc[branchesEnum[ci % numSub].key]++; ci++; }
+    }
+    // 每个二级分支内随机抽样（排除已强制的题），并自然夹紧到该分支上限
     const sampled = [];
-    cats.forEach(cat => {
-      const arr = shuffle(byCat[cat].filter(q => !forcedIds.has(q.id)));
-      sampled.push(...arr.slice(0, alloc[cat] || 0));
+    branchesEnum.forEach(b => {
+      const arr = shuffle(active.filter(q => !forcedIds.has(q.id) && matchSub(q, b)));
+      sampled.push(...arr.slice(0, alloc[b.key] || 0));
     });
     qSegs = shuffle(forced.concat(sampled));
     qidToIndex = new Map();
@@ -1423,6 +1436,8 @@
   renderRules();
   refreshEdCatSelect();
   renderEditor();
+  // 初始根据默认抽题模式显示「自定义比例」按钮（默认按题目，故显示）
+  document.getElementById('btnQuota').style.display = (wheelMode === 'question') ? '' : 'none';
   rebuild();
   </script>
 </body>
