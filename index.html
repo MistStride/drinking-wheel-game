@@ -312,12 +312,12 @@
       <div class="card">
         <h2>⑦ 暗箱操作 <span class="tag">指定某次必中</span></h2>
         <div class="row">
-          <span>第</span><input type="number" id="exactN" min="1" value="3" /><span>次必中类别</span>
-          <select id="exactCat"></select><button id="addExact">添加</button>
+          <span>第</span><input type="number" id="exactN" min="1" value="3" /><span>次必中</span>
+          <select id="exactCat"></select><select id="exactSub"></select><button id="addExact">添加</button>
         </div>
         <div class="row">
-          <span>前</span><input type="number" id="prefixK" min="1" value="2" /><span>次必中类别</span>
-          <select id="prefixCat"></select><button id="addPrefix">添加</button>
+          <span>前</span><input type="number" id="prefixK" min="1" value="2" /><span>次必中</span>
+          <select id="prefixCat"></select><select id="prefixSub"></select><button id="addPrefix">添加</button>
         </div>
         <hr class="sep" />
         <div class="sub" style="padding-left:0">
@@ -640,6 +640,11 @@
     const forcedIds = new Set();
     rigging.rules.forEach(r => {
       if ((r.type === 'exactQ' || r.type === 'prefixQ') && QB.questions.some(q => q.id === r.qid && isActive(q))) forcedIds.add(r.qid);
+      // 二级暗箱：保证该二级至少有一题进样本，转盘才能停到它（否则 idx 无定义，命中失效）
+      if ((r.type === 'exact' || r.type === 'prefix') && r.sub && r.sub.value != null) {
+        const cand = QB.questions.find(q => isActive(q) && (allowRepeat || !drawnIds.has(q.id)) && qMatchesSub(q, r.sub));
+        if (cand) forcedIds.add(cand.id);
+      }
     });
     const forced = active.filter(q => forcedIds.has(q.id));
 
@@ -749,9 +754,14 @@
   // ===================== 抽取逻辑 =====================
   function branchWeight(b) { return CAT_META[b.cat].weight * Math.max(1, b.count); }
 
-  function pickBranch(cat) {
+  function pickBranch(cat, sub) {
     let pool = branches;
     if (cat) pool = branches.filter(b => b.cat === cat);
+    if (sub && sub.value != null) {
+      const hit = pool.filter(b => b.questions.some(q => qMatchesSub(q, sub)));
+      if (hit.length) pool = hit;                       // ★ 命中二级则锁定该二级分支
+      else if (!pool.length) return null;               // 该二级无分支 → 由调用方退回整类
+    }
     if (pool.length === 0) pool = branches;
     if (pool.length === 0) return null;
     const total = pool.reduce((a, b) => a + branchWeight(b), 0);
@@ -760,10 +770,26 @@
     return pool[0];
   }
 
-  // 按题目模式：在已抽样的 qSegs 里均匀随机抽一道（cat 限定类别）；样本已按类别比例分配
-  function pickQuestion(cat) {
+  // 二级暗箱匹配：sub={kind:'topic'|'contact'|'amount', value}；sub 缺失=整类
+  function qMatchesSub(q, sub) {
+    if (!sub || sub.value == null) return true;
+    if (sub.kind === 'topic')  return q.topic  === sub.value;
+    if (sub.kind === 'contact') return q.contact === sub.value;
+    if (sub.kind === 'amount') return q.amount  === sub.value;
+    return true;
+  }
+
+  // 按题目模式：在已抽样的 qSegs 里均匀随机抽一道（cat 限定类别，sub 限定二级）；样本已按类别比例分配
+  function pickQuestion(cat, sub) {
     let pool = qSegs;
     if (cat) pool = pool.filter(q => q.cat === cat);
+    if (sub && sub.value != null) {
+      const hit = pool.filter(q => qMatchesSub(q, sub));
+      if (hit.length) return hit[Math.floor(Math.random() * hit.length)];                  // 命中二级必中该二级
+      const full = QB.questions.filter(q => isActive(q) && (allowRepeat || !drawnIds.has(q.id)) && qMatchesSub(q, sub));
+      if (full.length) return full[Math.floor(Math.random() * full.length)];              // 回退：样本未含该二级则从全量生效题取
+      if (!pool.length) return null;                                                      // 该二级彻底无题 → 由调用方退回整类随机
+    }
     if (pool.length === 0) pool = qSegs;
     if (pool.length === 0) return null;
     return pool[Math.floor(Math.random() * pool.length)];
@@ -772,11 +798,11 @@
   // 返回 {kind:'cat',cat} 或 {kind:'q',qid}，或 null
   function resolveRigging(n) {
     for (const r of rigging.rules) if (r.type === 'prefixQ' && n <= r.count) return { kind: 'q', qid: r.qid };
-    for (const r of rigging.rules) if (r.type === 'prefix' && n <= r.count) return { kind: 'cat', cat: r.cat };
+    for (const r of rigging.rules) if (r.type === 'prefix' && n <= r.count) return { kind: 'cat', cat: r.cat, sub: r.sub || null };
     for (const r of rigging.rules) {
       if ((r.type === 'exactQ' || r.type === 'exact') && r.spin === n && !rigging.usedExact.has(r.id)) {
         rigging.usedExact.add(r.id);
-        return r.type === 'exactQ' ? { kind: 'q', qid: r.qid } : { kind: 'cat', cat: r.cat };
+        return r.type === 'exactQ' ? { kind: 'q', qid: r.qid } : { kind: 'cat', cat: r.cat, sub: r.sub || null };
       }
     }
     return null;
@@ -801,7 +827,7 @@
     if (wheelMode === 'question') {
       // 按题目模式
       if (rig && rig.kind === 'q') q = QB.questions.find(x => x.id === rig.qid && isActive(x)) || null;
-      if (!q && rig && rig.kind === 'cat') q = pickQuestion(rig.cat);
+      if (!q && rig && rig.kind === 'cat') q = pickQuestion(rig.cat, rig.sub);
       if (!q) q = pickQuestion(null);
       if (!q) { alert('请至少开启一个内容类别再开始'); isSpinning = false; spinCount--; document.getElementById('roundNum').textContent = spinCount; return; }
       idx = qidToIndex.get(q.id);
@@ -815,7 +841,8 @@
       }
       if (!targetBranch) {
         const forcedCat = (rig && rig.kind === 'cat') ? rig.cat : null;
-        targetBranch = pickBranch(forcedCat);
+        const forcedSub = (rig && rig.kind === 'cat') ? rig.sub : null;
+        targetBranch = pickBranch(forcedCat, forcedSub);
         if (!targetBranch) { alert('请至少开启一个内容类别再开始'); isSpinning = false; spinCount--; document.getElementById('roundNum').textContent = spinCount; return; }
         q = targetBranch.questions[Math.floor(Math.random() * targetBranch.questions.length)];
       }
@@ -911,6 +938,23 @@
     Object.keys(CAT_META).forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = CAT_META[k].label; sel.appendChild(o); });
   }
 
+  // 暗箱二级候选项：第 0 项永远是「整类（不细分）」value 为空=不细分；其余按一级类的维度动态生成
+  function rigSubOptionsFor(cat) {
+    const opts = [{ value: '', label: '整类（不细分）' }];
+    if (cat === 'truth' || cat === 'deeptalk') {
+      (QB.topics[cat] || []).forEach(t => { if (settings[cat + 'Topics'][t.id] !== false) opts.push({ value: t.id, label: t.label }); });
+    } else if (cat === 'dare') {
+      ['社牛solo', '礼貌试探', '升温互动', '全场尖叫'].forEach((name, i) => { if (i <= settings.maxContact) opts.push({ value: String(i), label: name }); });
+    } else if (cat === 'drink') {
+      ['sip', 'glass', 'chug'].forEach(a => { if (AMOUNT_LEVEL[a] <= AMOUNT_LEVEL[settings.maxAmount]) opts.push({ value: a, label: levelLabelOf(a) }); });
+    }
+    return opts;
+  }
+  function fillRigSub(sel, cat) {
+    sel.innerHTML = '';
+    rigSubOptionsFor(cat).forEach(o => { const el = document.createElement('option'); el.value = o.value; el.textContent = o.label; sel.appendChild(el); });
+  }
+
   function renderRules() {
     const box = document.getElementById('ruleList'); box.innerHTML = '';
     if (rigging.rules.length === 0) { box.innerHTML = '<div class="hint">暂无暗箱规则。</div>'; return; }
@@ -919,7 +963,8 @@
       let desc, color, label;
       if (rule.type === 'exact' || rule.type === 'prefix') {
         desc = rule.type === 'exact' ? ('第 ' + rule.spin + ' 次必中') : ('前 ' + rule.count + ' 次必中');
-        color = CAT_META[rule.cat].color; label = CAT_META[rule.cat].label;
+        color = CAT_META[rule.cat].color;
+        label = CAT_META[rule.cat].label + (rule.sub ? '·' + rule.sub.label : '（整类）');
       } else {
         const qq = QB.questions.find(x => x.id === rule.qid);
         const n = rule.type === 'exactQ' ? rule.spin : rule.count;
@@ -1316,15 +1361,33 @@
   settingsBackdrop.addEventListener('click', closeSettings);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSettings(); });
 
+  // 从「一级类 + 二级下拉」读取 sub；二级选「整类」(value 为空) 则不写 sub
+  function readRigSub(cat, subSel) {
+    const v = subSel.value;
+    if (!v) return null;
+    const kind = (cat === 'truth' || cat === 'deeptalk') ? 'topic' : (cat === 'dare' ? 'contact' : 'amount');
+    const label = subSel.options[subSel.selectedIndex].textContent;
+    return { kind, value: kind === 'contact' ? Number(v) : v, label };
+  }
   document.getElementById('addExact').addEventListener('click', () => {
     const n = parseInt(document.getElementById('exactN').value, 10);
     const cat = document.getElementById('exactCat').value;
-    if (n > 0) { rigging.rules.push({ type: 'exact', spin: n, cat, id: ruleId() }); renderRules(); }
+    if (n > 0) {
+      const r = { type: 'exact', spin: n, cat, id: ruleId() };
+      const s = readRigSub(cat, document.getElementById('exactSub'));
+      if (s) r.sub = s;
+      rigging.rules.push(r); renderRules();
+    }
   });
   document.getElementById('addPrefix').addEventListener('click', () => {
     const k = parseInt(document.getElementById('prefixK').value, 10);
     const cat = document.getElementById('prefixCat').value;
-    if (k > 0) { rigging.rules.push({ type: 'prefix', count: k, cat, id: ruleId() }); renderRules(); }
+    if (k > 0) {
+      const r = { type: 'prefix', count: k, cat, id: ruleId() };
+      const s = readRigSub(cat, document.getElementById('prefixSub'));
+      if (s) r.sub = s;
+      rigging.rules.push(r); renderRules();
+    }
   });
 
   document.getElementById('rigSearch').addEventListener('input', renderRigResults);
@@ -1459,6 +1522,13 @@
   renderTopicChecks();
   fillCatSelect(document.getElementById('exactCat'));
   fillCatSelect(document.getElementById('prefixCat'));
+  const exactSub = document.getElementById('exactSub');
+  const prefixSub = document.getElementById('prefixSub');
+  fillRigSub(exactSub, document.getElementById('exactCat').value);
+  fillRigSub(prefixSub, document.getElementById('prefixCat').value);
+  // 切换一级类 → 二级选项重置为「整类」并重新生成
+  document.getElementById('exactCat').addEventListener('change', e => { fillRigSub(exactSub, e.target.value); });
+  document.getElementById('prefixCat').addEventListener('change', e => { fillRigSub(prefixSub, e.target.value); });
   renderRules();
   refreshEdCatSelect();
   renderEditor();
