@@ -128,6 +128,9 @@
     transition: transform .2s var(--bounce);
   }
   .rule:hover { transform: scale(1.02) rotate(.4deg); }
+  .rule.ban { border-color: #f3b1ab; background: #fff5f4; color: #c0493f; }
+  .rule.ban .cat-dot { box-shadow: none; }
+  .rule .tag-ban { font-size: 11px; padding: 1px 7px; border-radius: 8px; background: #f3b1ab; color: #fff; margin-right: 6px; }
   .cat-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
   .hint { color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.6; }
   footer { color: var(--muted); font-size: 12px; padding: 0 32px 36px; text-align: center; }
@@ -310,7 +313,7 @@
 
       <!-- 暗箱操作 -->
       <div class="card">
-        <h2>⑦ 暗箱操作 <span class="tag">指定某次必中</span></h2>
+        <h2>⑦ 暗箱操作 <span class="tag">指定必中 / 禁止抽中</span></h2>
         <div class="row">
           <span>第</span><input type="number" id="exactN" min="1" value="3" /><span>次必中</span>
           <select id="exactCat"></select><select id="exactSub"></select><button id="addExact">添加</button>
@@ -318,6 +321,10 @@
         <div class="row">
           <span>前</span><input type="number" id="prefixK" min="1" value="2" /><span>次必中</span>
           <select id="prefixCat"></select><select id="prefixSub"></select><button id="addPrefix">添加</button>
+        </div>
+        <div class="row">
+          <span>永不抽中</span>
+          <select id="avoidCat"></select><select id="avoidSub"></select><button id="addAvoid">添加</button>
         </div>
         <hr class="sep" />
         <div class="sub" style="padding-left:0">
@@ -333,6 +340,9 @@
           <div class="row">
             <span>前</span><input type="number" id="qPrefixK" min="1" value="2" /><span>次必中此题</span>
             <button id="addQPrefix">添加</button>
+          </div>
+          <div class="row">
+            <button id="addQAvoid">永不抽中此题</button>
           </div>
           <div class="hint">搜索结果只来自「当前会进转盘」的题目；点选一条后再添加规则。</div>
         </div>
@@ -492,11 +502,77 @@
   /*__GUIDE_MD__*/
   // ===================== 分类元信息 =====================
   const CAT_META = {
-    truth:    { label: '真心话', color: '#ffb3c6', weight: 3 },
-    dare:     { label: '大冒险', color: '#ffd56b', weight: 3 },
-    drink:    { label: '直接喝', color: '#9fd3ff', weight: 2 },
-    deeptalk: { label: 'Deeptalk', color: '#c9b6ff', weight: 1 },
+    truth:    { label: '真心话', labelEn: 'Truth', color: '#ffb3c6', weight: 3 },
+    dare:     { label: '大冒险', labelEn: 'Dare', color: '#ffd56b', weight: 3 },
+    drink:    { label: '直接喝', labelEn: 'Drink', color: '#9fd3ff', weight: 2 },
+    deeptalk: { label: 'Deeptalk', labelEn: 'Deeptalk', color: '#c9b6ff', weight: 1 },
   };
+
+  // ===================== 多语言（中文 / English） =====================
+  // 英文文案字典：键为原文（中文），值为英文。build.js 注入。缺失键则保留中文。
+  const I18N_EN = /*__I18N_EN__*/{}/*__I18N_EN__*/;
+  let lang = (function () { try { return localStorage.getItem('lang') || 'zh'; } catch (e) { return 'zh'; } })();
+  function t(s) { if (!s) return s; return (lang === 'en' && I18N_EN[s] != null) ? I18N_EN[s] : s; }
+  // 数据维度：随 lang 返回中文/英文
+  function catLabel(k) { const m = CAT_META[k]; return (lang === 'en' && m && m.labelEn) ? m.labelEn : (m ? m.label : k); }
+  function topicLabelOf(tt) { return (lang === 'en' && tt && tt.labelEn) ? tt.labelEn : (tt ? tt.label : ''); }
+  function qText(q) { return (lang === 'en' && q && q.textEn) ? q.textEn : (q ? q.text : ''); }
+  function drinkAmountLabel(a) {
+    const m = { sip: ['最温和·趣味喝法', 'Mildest · fun sip'], 'half-glass': ['半杯', 'Half cup'], glass: ['喝一杯', 'One cup'], chug: ['罚酒干杯（最猛）', 'Chug (hardest)'], bottle: ['整瓶', 'Whole bottle'] };
+    const e = m[a]; return (lang === 'en' && e) ? e[1] : (e ? e[0] : a);
+  }
+  function contactLabel(i) {
+    const zh = ['社牛solo', '礼貌试探', '升温互动', '全场尖叫'];
+    const en = ['Social solo', 'Polite probing', 'Heating up', 'Crowd scream'];
+    return lang === 'en' ? (en[i] || ('Level ' + i)) : (zh[i] || ('尺度 ' + i));
+  }
+  function strangerLabel() { return lang === 'en' ? 'Stranger interaction' : '陌生人互动'; }
+  // 静态文案一键翻译：仅处理含中文的文本节点与属性（字典缺失则保留中文）；动态容器跳过（由各自渲染函数负责）
+  const _I18N_ATTRS = ['placeholder', 'title', 'aria-label'];
+  const _I18N_SKIP = '#edBody,#ruleList,#rigResults,#quotaList,#result,#catSwitches,#truthTopics';
+  const _zhMap = new Map();
+  function applyI18n(root) {
+    root = root || document;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, null);
+    const els = [root]; let n = walker.nextNode();
+    while (n) { els.push(n); n = walker.nextNode(); }
+    for (const el of els) {
+      if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
+      if (el.closest && el.closest(_I18N_SKIP)) continue;
+      for (const node of Array.from(el.childNodes)) {
+        if (node.nodeType === 3 && node.nodeValue && node.nodeValue.trim()) {
+          if (!_zhMap.has(node)) _zhMap.set(node, node.nodeValue);
+          const orig = _zhMap.get(node);
+          const en = (lang === 'en' && I18N_EN[orig] != null) ? I18N_EN[orig] : orig;
+          if (en !== node.nodeValue) node.nodeValue = en;
+        }
+      }
+      for (const a of _I18N_ATTRS) {
+        const v = el.getAttribute(a);
+        if (v && /[一-鿿]/.test(v)) {
+          if (!_zhMap.has(el.getAttributeNode(a))) _zhMap.set(el.getAttributeNode(a), v);
+          const en = (lang === 'en' && I18N_EN[v] != null) ? I18N_EN[v] : v;
+          if (en !== v) el.setAttribute(a, en);
+        }
+      }
+    }
+  }
+  function setLang(newLang) {
+    lang = newLang;
+    try { localStorage.setItem('lang', lang); } catch (e) {}
+    document.documentElement.lang = (lang === 'en') ? 'en' : 'zh-CN';
+    updateLangToggle();
+    applyI18n(document);
+    if (pendingResult) showResult(pendingResult);
+    rebuild();
+    renderCatSwitches(); renderTopicChecks();
+    refreshEdCatSelect(); renderEditor();
+    renderRules(); renderRigResults(); renderQuotaModal();
+  }
+  function updateLangToggle() {
+    const b = document.getElementById('langToggle');
+    if (b) b.textContent = (lang === 'en') ? '中文' : 'EN';
+  }
 
   let QB = window.QUESTION_BANK;
 
@@ -571,18 +647,18 @@
   function branchLabel(q) {
     if (q.cat === 'truth' || q.cat === 'deeptalk') {
       const t = (QB.topics[q.cat] || []).find(t => t.id === q.topic);
-      return (t && t.label) || q.topic || CAT_META[q.cat].label;
+      return topicLabelOf(t) || catLabel(q.cat);
     }
     if (q.cat === 'dare') {
-      if (q.stranger) return '陌生人互动';
-      return ['社牛solo', '礼貌试探', '升温互动', '全场尖叫'][q.contact] || '大冒险';
+      if (q.stranger) return strangerLabel();
+      return contactLabel(q.contact);
     }
     if (q.cat === 'drink') {
-      if (q.combo) return '喝+一道题';
-      if (q.who && q.who !== 'self') return '指定他人/接力';
-      return { sip: '趣味喝法', 'half-glass': '半杯', glass: '喝一杯', chug: '罚酒干杯', bottle: '整瓶' }[q.amount] || '直接喝';
+      if (q.combo) return lang === 'en' ? 'Drink + a question' : '喝+一道题';
+      if (q.who && q.who !== 'self') return lang === 'en' ? 'Assign other / relay' : '指定他人/接力';
+      return drinkAmountLabel(q.amount);
     }
-    return CAT_META[q.cat].label;
+    return catLabel(q.cat);
   }
 
   function buildBranches() {
@@ -590,6 +666,7 @@
     QB.questions.forEach(q => {
       if (!isActive(q)) return;
       if (!allowRepeat && drawnIds.has(q.id)) return;
+      if (isBanned(q) && !isForcedProtected(q)) return;   // 暗箱·不能抽中：移除被禁题目（必中优先保留）
       const key = q.cat + '::' + branchLabel(q);
       if (!map.has(key)) map.set(key, { key, label: branchLabel(q), cat: q.cat, count: 0, questions: [] });
       const b = map.get(key); b.count++; b.questions.push(q);
@@ -598,7 +675,7 @@
   }
 
   // 二级分支枚举：列出当前生效、且题库有题的二级分支（含各自上限）
-  function levelLabelOf(a) { return ({ sip: '最温和·趣味喝法', glass: '喝一杯', chug: '罚酒干杯（最猛）' })[a] || a; }
+  function levelLabelOf(a) { const m = { sip: ['最温和·趣味喝法', 'Mildest · fun sip'], glass: ['喝一杯', 'One cup'], chug: ['罚酒干杯（最猛）', 'Chug (hardest)'] }; const e = m[a]; return (lang === 'en' && e) ? e[1] : (e ? e[0] : a); }
   function enumerateBranches() {
     const inWheel = q => isActive(q) && (allowRepeat || !drawnIds.has(q.id));
     const list = [];
@@ -606,16 +683,16 @@
       (QB.topics[cat] || []).forEach(t => {
         if (settings[cat + 'Topics'][t.id] === false) return;
         const max = QB.questions.filter(q => q.cat === cat && q.topic === t.id && inWheel(q)).length;
-        if (max > 0) list.push({ key: cat + '::' + t.id, cat, sub: t.id, label: CAT_META[cat].label + ' · ' + t.label, max });
+        if (max > 0) list.push({ key: cat + '::' + t.id, cat, sub: t.id, label: catLabel(cat) + ' · ' + topicLabelOf(t), max });
       });
     });
     [0, 1, 2, 3].forEach(c => {
       const max = QB.questions.filter(q => q.cat === 'dare' && q.contact === c && inWheel(q)).length;
-      if (max > 0) list.push({ key: 'dare::' + c, cat: 'dare', sub: String(c), label: '大冒险 · 尺度' + c, max });
+      if (max > 0) list.push({ key: 'dare::' + c, cat: 'dare', sub: String(c), label: catLabel('dare') + ' · ' + contactLabel(c), max });
     });
     ['sip', 'glass', 'chug'].forEach(a => {
       const max = QB.questions.filter(q => q.cat === 'drink' && q.amount === a && inWheel(q)).length;
-      if (max > 0) list.push({ key: 'drink::' + a, cat: 'drink', sub: a, label: '直接喝 · ' + levelLabelOf(a), max });
+      if (max > 0) list.push({ key: 'drink::' + a, cat: 'drink', sub: a, label: catLabel('drink') + ' · ' + drinkAmountLabel(a), max });
     });
     return list;
   }
@@ -638,10 +715,16 @@
     const forcedIds = new Set();
     rigging.rules.forEach(r => {
       if ((r.type === 'exactQ' || r.type === 'prefixQ') && QB.questions.some(q => q.id === r.qid && isActive(q))) forcedIds.add(r.qid);
-      // 二级暗箱：保证该二级至少有一题进样本，转盘才能停到它（否则 idx 无定义，命中失效）
-      if ((r.type === 'exact' || r.type === 'prefix') && r.sub && r.sub.value != null) {
-        const cand = QB.questions.find(q => isActive(q) && (allowRepeat || !drawnIds.has(q.id)) && qMatchesSub(q, r.sub));
-        if (cand) forcedIds.add(cand.id);
+      // 必中（能）优先于 不能抽中：保证被必中的题/二级/类别至少有一道进样本（绕过 ban，否则命中失效）
+      if ((r.type === 'exact' || r.type === 'prefix')) {
+        if (r.sub && r.sub.value != null) {
+          const cand = QB.questions.find(q => isActive(q) && (allowRepeat || !drawnIds.has(q.id)) && qMatchesSub(q, r.sub));
+          if (cand) forcedIds.add(cand.id);
+        } else {
+          // 整类必中：至少强制一道该类的题入样（即便该类被整体禁止，必中仍优先）
+          const cand = QB.questions.find(q => isActive(q) && (allowRepeat || !drawnIds.has(q.id)) && q.cat === r.cat);
+          if (cand) forcedIds.add(cand.id);
+        }
       }
     });
     const forced = active.filter(q => forcedIds.has(q.id));
@@ -652,7 +735,7 @@
       const sampled = [];
       branchesEnum.forEach(b => {
         const n = Math.max(0, Math.min(manualQuota[b.key] || 0, b.max));
-        const arr = shuffle(active.filter(q => !forcedIds.has(q.id) && matchSub(q, b)));
+        const arr = shuffle(active.filter(q => !forcedIds.has(q.id) && !isBanned(q) && matchSub(q, b)));
         sampled.push(...arr.slice(0, n));
       });
       qSegs = shuffle(forced.concat(sampled));
@@ -695,7 +778,7 @@
     // 每个二级分支内随机抽样（排除已强制的题），并自然夹紧到该分支上限
     const sampled = [];
     branchesEnum.forEach(b => {
-      const arr = shuffle(active.filter(q => !forcedIds.has(q.id) && matchSub(q, b)));
+      const arr = shuffle(active.filter(q => !forcedIds.has(q.id) && !isBanned(q) && matchSub(q, b)));
       sampled.push(...arr.slice(0, alloc[b.key] || 0));
     });
     qSegs = shuffle(forced.concat(sampled));
@@ -711,12 +794,12 @@
   function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 
   function buildPrizes() {
-    const empty = [{ background: '#6b7280', fonts: [{ text: '请开启内容', top: '40%', fontColor: '#fff', fontSize: '13px', fontWeight: 'bold' }] }];
+    const empty = [{ background: '#6b7280', fonts: [{ text: t('请开启内容'), top: '40%', fontColor: '#fff', fontSize: '13px', fontWeight: 'bold' }] }];
     if (wheelMode === 'question') {
       if (qSegs.length === 0) return empty;
       return qSegs.map((q, i) => ({
         background: i % 2 === 0 ? CAT_META[q.cat].color : shade(CAT_META[q.cat].color, -18),
-        fonts: [{ text: truncate(q.text, 12), top: '40%', fontColor: '#5a3a47', fontSize: '11px', fontWeight: 'bold' }]
+        fonts: [{ text: truncate(qText(q), 12), top: '40%', fontColor: '#5a3a47', fontSize: '11px', fontWeight: 'bold' }]
       }));
     }
     if (branches.length === 0) return empty;
@@ -742,7 +825,7 @@
         blocks: [{ padding: '12px', background: '#ffffff' }],
         prizes: buildPrizes(),
         buttons: [{ radius: '38%', background: '#ff6b9d', pointer: true,
-          fonts: [{ text: '开始', top: '-12px', fontColor: '#fff', fontSize: '16px', fontWeight: 'bold' }] }],
+          fonts: [{ text: t('开始'), top: '-12px', fontColor: '#fff', fontSize: '16px', fontWeight: 'bold' }] }],
         start: onSpinStart,
         end: onSpinEnd
       });
@@ -810,8 +893,8 @@
     if (isSpinning) return;
     const segCount = wheelMode === 'question' ? qSegs.length : branches.length;
     if (segCount === 0) {
-      if (!allowRepeat && drawnIds.size > 0) alert('题目已抽完（不重复模式）。点『重置已抽』再玩一轮。');
-      else alert('请至少开启一个内容类别再开始');
+      if (!allowRepeat && drawnIds.size > 0) alert(t('题目已抽完（不重复模式）。点『重置已抽』再玩一轮。'));
+      else alert(t('请至少开启一个内容类别再开始'));
       isSpinning = false; spinCount--; document.getElementById('roundNum').textContent = spinCount;
       return;
     }
@@ -827,7 +910,7 @@
       if (rig && rig.kind === 'q') q = QB.questions.find(x => x.id === rig.qid && isActive(x)) || null;
       if (!q && rig && rig.kind === 'cat') q = pickQuestion(rig.cat, rig.sub);
       if (!q) q = pickQuestion(null);
-      if (!q) { alert('请至少开启一个内容类别再开始'); isSpinning = false; spinCount--; document.getElementById('roundNum').textContent = spinCount; return; }
+      if (!q) { alert(t('请至少开启一个内容类别再开始')); isSpinning = false; spinCount--; document.getElementById('roundNum').textContent = spinCount; return; }
       idx = qidToIndex.get(q.id);
       if (idx === undefined) { q = pickQuestion(rig && rig.kind === 'cat' ? rig.cat : null) || pickQuestion(null); idx = qidToIndex.get(q.id); } // 兜底：命中的题未进样本
     } else {
@@ -841,7 +924,7 @@
         const forcedCat = (rig && rig.kind === 'cat') ? rig.cat : null;
         const forcedSub = (rig && rig.kind === 'cat') ? rig.sub : null;
         targetBranch = pickBranch(forcedCat, forcedSub);
-        if (!targetBranch) { alert('请至少开启一个内容类别再开始'); isSpinning = false; spinCount--; document.getElementById('roundNum').textContent = spinCount; return; }
+        if (!targetBranch) { alert(t('请至少开启一个内容类别再开始')); isSpinning = false; spinCount--; document.getElementById('roundNum').textContent = spinCount; return; }
         q = targetBranch.questions[Math.floor(Math.random() * targetBranch.questions.length)];
       }
       idx = branches.indexOf(targetBranch);
@@ -849,15 +932,34 @@
 
     // 旋转期间先把结果区置为「旋转中」，避免提前显示题目
     pendingResult = q;
-    document.getElementById('result').innerHTML = '<span class="pill" style="background:linear-gradient(135deg,#ff9ec4,#ff6b9d);color:#fff">🎡 旋转中…</span>';
+    document.getElementById('result').innerHTML = '<span class="pill" style="background:linear-gradient(135deg,#ff9ec4,#ff6b9d);color:#fff">' + t('🎡 旋转中…') + '</span>';
     myLucky.play();
     const duration = 2600 + Math.random() * 900;
     setTimeout(() => { myLucky.stop(idx); }, duration); // 真正的结果在 end 回调里展示
   }
 
-  // 判断某题是否被暗箱规则引用（被引用则永不从转盘移除，保证可重复命中）
+  // 判断某题是否被暗箱规则「必中」引用（被引用则永不从转盘移除，且优先级高于「不能抽中」）
   function isRiggingProtected(id) {
     return rigging.rules.some(r => (r.type === 'exactQ' || r.type === 'prefixQ') && r.qid === id);
+  }
+  // 必中保护超集：覆盖 精准题 与 类别/二级 必中（用于「不能抽中」的豁免——能 优先于 不能）
+  function isForcedProtected(q) {
+    for (const r of rigging.rules) {
+      if ((r.type === 'exactQ' || r.type === 'prefixQ') && r.qid === q.id) return true;
+      if ((r.type === 'exact' || r.type === 'prefix') && q.cat === r.cat && (!r.sub || qMatchesSub(q, r.sub))) return true;
+    }
+    return false;
+  }
+  // 暗箱·不能抽中：返回某题是否被「永不抽中」规则命中（整类 or 二级 or 精准题）
+  function isBanned(q) {
+    for (const r of rigging.rules) {
+      if (r.type === 'avoidQ' && r.qid === q.id) return true;
+      if (r.type === 'avoid') {
+        if (r.sub && r.sub.value != null) { if (qMatchesSub(q, r.sub)) return true; }
+        else if (q.cat === r.cat) return true;
+      }
+    }
+    return false;
   }
 
   // 在不重复抽取模式下，仅把「刚抽中的这一道」从当前转盘移除，其余扇区保持稳定（不重新抽样打乱）
@@ -894,13 +996,13 @@
   function showResult(q) {
     const box = document.getElementById('result');
     box.classList.remove('placeholder');
-    const catLabel = CAT_META[q.cat].label;
-    const topicLabel = (q.topic && (QB.topics[q.cat] || []).find(t => t.id === q.topic)) ? ((QB.topics[q.cat].find(t => t.id === q.topic).label) + ' · ') : '';
+    const catLabel = catLabelOf(q.cat);
+    const topicLabel = (q.topic && (QB.topics[q.cat] || []).find(tt => tt.id === q.topic)) ? (topicLabelOf(QB.topics[q.cat].find(tt => tt.id === q.topic)) + ' · ') : '';
     let extra = '';
-    if (q.cat === 'dare') extra = ' · 接触' + q.contact + (q.stranger ? ' · 陌生人' : '');
-    if (q.cat === 'drink') extra = ' · ' + (q.combo ? '含附加题' : (q.who !== 'self' ? '指定他人' : '自喝'));
+    if (q.cat === 'dare') extra = t(' · 接触') + q.contact + (q.stranger ? t(' · 陌生人') : '');
+    if (q.cat === 'drink') extra = ' · ' + (q.combo ? t('含附加题') : (q.who !== 'self' ? t('指定他人') : t('自喝')));
     box.innerHTML = '<span class="pill" style="background:' + CAT_META[q.cat].color + '">' + catLabel + '</span> ' +
-      '<span class="pill-risk" style="background:var(--tint);color:var(--muted);border:1px solid var(--line)">' + topicLabel + (q.risk || 'safe') + extra + '</span><br>' + q.text;
+      '<span class="pill-risk" style="background:var(--tint);color:var(--muted);border:1px solid var(--line)">' + topicLabel + (q.risk || 'safe') + extra + '</span><br>' + qText(q);
   }
 
   // ===================== 面板：分类/话题开关 =====================
@@ -909,7 +1011,7 @@
     box.innerHTML = '';
     Object.keys(CAT_META).forEach(k => {
       const l = document.createElement('label'); l.className = 'chk';
-      l.innerHTML = '<input type="checkbox" data-cat="' + k + '"' + (settings.enabled[k] ? ' checked' : '') + '> ' + CAT_META[k].label;
+      l.innerHTML = '<input type="checkbox" data-cat="' + k + '"' + (settings.enabled[k] ? ' checked' : '') + '> ' + catLabel(k);
       box.appendChild(l);
     });
   }
@@ -918,33 +1020,33 @@
     const tb = document.getElementById('truthTopics'); tb.innerHTML = '';
     QB.topics.truth.forEach(t => {
       const l = document.createElement('label'); l.className = 'chk';
-      l.innerHTML = '<input type="checkbox" data-topic="truth:' + t.id + '"' + (settings.truthTopics[t.id] ? ' checked' : '') + '> ' + t.label;
+      l.innerHTML = '<input type="checkbox" data-topic="truth:' + t.id + '"' + (settings.truthTopics[t.id] ? ' checked' : '') + '> ' + topicLabelOf(t);
       tb.appendChild(l);
     });
-    const sep = document.createElement('div'); sep.style.marginTop = '8px'; sep.style.color = 'var(--muted)'; sep.textContent = 'Deeptalk 话题：';
+    const sep = document.createElement('div'); sep.style.marginTop = '8px'; sep.style.color = 'var(--muted)'; sep.textContent = t('Deeptalk 话题：');
     tb.appendChild(sep);
     QB.topics.deeptalk.forEach(t => {
       const l = document.createElement('label'); l.className = 'chk';
-      l.innerHTML = '<input type="checkbox" data-topic="deeptalk:' + t.id + '"' + (settings.deeptalkTopics[t.id] ? ' checked' : '') + '> ' + t.label;
+      l.innerHTML = '<input type="checkbox" data-topic="deeptalk:' + t.id + '"' + (settings.deeptalkTopics[t.id] ? ' checked' : '') + '> ' + topicLabelOf(t);
       tb.appendChild(l);
     });
   }
 
   function fillCatSelect(sel, includeAll) {
     sel.innerHTML = '';
-    if (includeAll) { const o = document.createElement('option'); o.value = 'all'; o.textContent = '全部分类'; sel.appendChild(o); }
-    Object.keys(CAT_META).forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = CAT_META[k].label; sel.appendChild(o); });
+    if (includeAll) { const o = document.createElement('option'); o.value = 'all'; o.textContent = t('全部分类'); sel.appendChild(o); }
+    Object.keys(CAT_META).forEach(k => { const o = document.createElement('option'); o.value = k; o.textContent = catLabel(k); sel.appendChild(o); });
   }
 
   // 暗箱二级候选项：第 0 项永远是「整类（不细分）」value 为空=不细分；其余按一级类的维度动态生成
   function rigSubOptionsFor(cat) {
-    const opts = [{ value: '', label: '整类（不细分）' }];
+    const opts = [{ value: '', label: t('整类（不细分）') }];
     if (cat === 'truth' || cat === 'deeptalk') {
-      (QB.topics[cat] || []).forEach(t => { if (settings[cat + 'Topics'][t.id] !== false) opts.push({ value: t.id, label: t.label }); });
+      (QB.topics[cat] || []).forEach(t => { if (settings[cat + 'Topics'][t.id] !== false) opts.push({ value: t.id, label: topicLabelOf(t) }); });
     } else if (cat === 'dare') {
-      ['社牛solo', '礼貌试探', '升温互动', '全场尖叫'].forEach((name, i) => { if (i <= settings.maxContact) opts.push({ value: String(i), label: name }); });
+      [0, 1, 2, 3].forEach(i => { if (i <= settings.maxContact) opts.push({ value: String(i), label: contactLabel(i) }); });
     } else if (cat === 'drink') {
-      ['sip', 'glass', 'chug'].forEach(a => { if (AMOUNT_LEVEL[a] <= AMOUNT_LEVEL[settings.maxAmount]) opts.push({ value: a, label: levelLabelOf(a) }); });
+      ['sip', 'glass', 'chug'].forEach(a => { if (AMOUNT_LEVEL[a] <= AMOUNT_LEVEL[settings.maxAmount]) opts.push({ value: a, label: drinkAmountLabel(a) }); });
     }
     return opts;
   }
@@ -955,24 +1057,31 @@
 
   function renderRules() {
     const box = document.getElementById('ruleList'); box.innerHTML = '';
-    if (rigging.rules.length === 0) { box.innerHTML = '<div class="hint">暂无暗箱规则。</div>'; return; }
+    if (rigging.rules.length === 0) { box.innerHTML = '<div class="hint">' + t('暂无暗箱规则。') + '</div>'; return; }
     rigging.rules.forEach((rule, idx) => {
-      const div = document.createElement('div'); div.className = 'rule';
+      const div = document.createElement('div');
+      const isBan = (rule.type === 'avoid' || rule.type === 'avoidQ');
+      div.className = 'rule' + (isBan ? ' ban' : '');
       let desc, color, label;
       if (rule.type === 'exact' || rule.type === 'prefix') {
-        desc = rule.type === 'exact' ? ('第 ' + rule.spin + ' 次必中') : ('前 ' + rule.count + ' 次必中');
+        desc = rule.type === 'exact' ? t('第 {n} 次必中').replace('{n}', rule.spin) : t('前 {n} 次必中').replace('{n}', rule.count);
         color = CAT_META[rule.cat].color;
-        label = CAT_META[rule.cat].label + (rule.sub ? '·' + rule.sub.label : '（整类）');
+        label = catLabel(rule.cat) + (rule.sub ? '·' + t(rule.sub.label) : t('（整类）'));
+      } else if (isBan) {
+        const qq = rule.type === 'avoidQ' ? QB.questions.find(x => x.id === rule.qid) : null;
+        desc = rule.type === 'avoid' ? t('永不抽中') : t('永不抽中此题');
+        color = '#e9746b';
+        label = rule.type === 'avoid' ? (catLabel(rule.cat) + (rule.sub ? '·' + t(rule.sub.label) : t('（整类）'))) : (qq ? truncate(qText(qq), 14) : '?');
       } else {
         const qq = QB.questions.find(x => x.id === rule.qid);
         const n = rule.type === 'exactQ' ? rule.spin : rule.count;
-        desc = (rule.type === 'exactQ' ? '第 ' : '前 ') + n + ' 次必中此题';
+        desc = (rule.type === 'exactQ' ? t('第 {n} 次必中此题') : t('前 {n} 次必中此题')).replace('{n}', n);
         color = CAT_META[qq ? qq.cat : 'truth'].color;
-        label = qq ? truncate(qq.text, 14) : '?';
+        label = qq ? truncate(qText(qq), 14) : '?';
       }
-      div.innerHTML = '<span><span class="cat-dot" style="background:' + color + '"></span>' + desc + '「' + label + '」</span>';
-      const btn = document.createElement('button'); btn.className = 'ghost sm'; btn.textContent = '删除';
-      btn.onclick = () => { rigging.rules.splice(idx, 1); renderRules(); };
+      div.innerHTML = '<span><span class="cat-dot" style="background:' + color + '"></span>' + (isBan ? '<span class="tag-ban">' + t('禁') + '</span>' : '') + desc + '「' + label + '」</span>';
+      const btn = document.createElement('button'); btn.className = 'ghost sm'; btn.textContent = t('删除');
+      btn.onclick = () => { rigging.rules.splice(idx, 1); renderRules(); rebuild(); };
       div.appendChild(btn); box.appendChild(div);
     });
   }
@@ -980,7 +1089,7 @@
   function rebuild() { buildBranches(); buildQuestionSegs(); renderWheel(); updateBankStat(); }
 
   function updateBankStat() {
-    document.getElementById('bankStat').textContent = '题库 ' + QB.questions.length + ' 题';
+    document.getElementById('bankStat').textContent = t('题库 {n} 题').replace('{n}', QB.questions.length);
   }
 
   // ===================== 暗箱·精准题目搜索 =====================
@@ -990,11 +1099,11 @@
     if (!kw) return;
     let list = QB.questions.filter(q => isActive(q) && (q.text || '').toLowerCase().includes(kw));
     if (list.length > 20) list = list.slice(0, 20);
-    if (list.length === 0) { box.innerHTML = '<div class="hint" style="padding:8px">无匹配（只搜索当前生效题目；可放宽过滤或开启高能模式）</div>'; return; }
+    if (list.length === 0) { box.innerHTML = '<div class="hint" style="padding:8px">' + t('无匹配（只搜索当前生效题目；可放宽过滤或开启高能模式）') + '</div>'; return; }
     list.forEach(q => {
       const div = document.createElement('div');
       div.className = 'rig-item' + (rigSelQid === q.id ? ' sel' : '');
-      div.innerHTML = '<span class="cat-dot" style="background:' + CAT_META[q.cat].color + '"></span><span class="txt">' + q.text + '</span>';
+      div.innerHTML = '<span class="cat-dot" style="background:' + CAT_META[q.cat].color + '"></span><span class="txt">' + qText(q) + '</span>';
       div.onclick = () => { rigSelQid = q.id; renderRigResults(); };
       box.appendChild(div);
     });
@@ -1007,16 +1116,11 @@
   }
   // 二级分类/量级选项：大冒险=肢体接触 0~3（尺度）；直接喝=饮酒量级（最温和·趣味喝法 / 喝一杯 / 罚酒干杯最猛）
   function levelOptionsFor(cat) {
-    if (cat === 'dare') return [
-      { value: '0', label: '尺度 0 · 社牛solo' },
-      { value: '1', label: '尺度 1 · 礼貌试探' },
-      { value: '2', label: '尺度 2 · 升温互动' },
-      { value: '3', label: '尺度 3 · 全场尖叫' },
-    ];
+    if (cat === 'dare') return [0, 1, 2, 3].map(i => ({ value: String(i), label: (lang === 'en' ? 'Level ' + i + ' · ' : '尺度 ' + i + ' · ') + contactLabel(i) }));
     if (cat === 'drink') return [
-      { value: 'sip', label: '最温和 · 趣味喝法' },
-      { value: 'glass', label: '喝一杯' },
-      { value: 'chug', label: '罚酒干杯（最猛）' },
+      { value: 'sip', label: drinkAmountLabel('sip') },
+      { value: 'glass', label: drinkAmountLabel('glass') },
+      { value: 'chug', label: drinkAmountLabel('chug') },
     ];
     return [];
   }
@@ -1039,17 +1143,17 @@
     if (cat === 'truth' || cat === 'deeptalk') {
       topicRow.style.display = '';
       levelRow.style.display = 'none';
-      topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; topicSel.appendChild(o); });
+      topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = topicLabelOf(t); topicSel.appendChild(o); });
       ncHint.style.display = 'none';
     } else if (cat === 'dare' || cat === 'drink') {
       topicRow.style.display = 'none';
       levelRow.style.display = '';
       const whoRow = document.getElementById('edNewWhoRow');
       if (cat === 'drink') {
-        levelSel.title = '直接喝 · 量级';
+        levelSel.title = t('直接喝 · 量级');
         whoRow.style.display = '';
       } else {
-        levelSel.title = '大冒险尺度分级';
+        levelSel.title = t('大冒险尺度分级');
         whoRow.style.display = 'none';
       }
       levelOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.value; o.textContent = t.label; levelSel.appendChild(o); });
@@ -1074,14 +1178,14 @@
     if (!isTopic && !isLevel) { row.style.display = 'none'; sel.innerHTML = '<option value="all">全部</option>'; return; }
     row.style.display = '';
     if (isTopic) {
-      label.textContent = '话题范围';
-      const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = '全部话题范围'; sel.appendChild(o0);
-      topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = t.label; sel.appendChild(o); });
+      label.textContent = t('话题范围');
+      const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = t('全部话题范围'); sel.appendChild(o0);
+      topicOptionsFor(cat).forEach(t => { const o = document.createElement('option'); o.value = t.id; o.textContent = topicLabelOf(t); sel.appendChild(o); });
     } else {
-      label.textContent = (cat === 'drink') ? '量级' : '尺度';
-      const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = (cat === 'drink') ? '全部量级' : '全部尺度'; sel.appendChild(o0);
+      label.textContent = (cat === 'drink') ? t('量级') : t('尺度');
+      const o0 = document.createElement('option'); o0.value = 'all'; o0.textContent = (cat === 'drink') ? t('全部量级') : t('全部尺度'); sel.appendChild(o0);
       if (cat === 'dare') {
-        ['0 · 社牛solo（表情包模仿/霸总台词）', '1 · 礼貌试探（握手/击掌）', '2 · 升温互动（拥抱/喂食）', '3 · 全场尖叫（贴面/耳语）'].forEach((t, i) => { const o = document.createElement('option'); o.value = String(i); o.textContent = t; sel.appendChild(o); });
+        ['0 · 社牛solo（表情包模仿/霸总台词）', '1 · 礼貌试探（握手/击掌）', '2 · 升温互动（拥抱/喂食）', '3 · 全场尖叫（贴面/耳语）'].forEach((tk, i) => { const o = document.createElement('option'); o.value = String(i); o.textContent = t(tk); sel.appendChild(o); });
       } else {
         levelOptionsFor('drink').forEach(t => { const o = document.createElement('option'); o.value = t.value; o.textContent = t.label; sel.appendChild(o); });
       }
@@ -1093,7 +1197,7 @@
     const cat = document.getElementById('edNewCat').value;
     if (cat !== 'truth' && cat !== 'deeptalk') return;
     const name = document.getElementById('edNewCatName').value.trim();
-    if (!name) { alert('请输入分类名'); return; }
+    if (!name) { alert(t('请输入分类名')); return; }
     QB.topics[cat] = QB.topics[cat] || [];
     const found = QB.topics[cat].find(t => t.label.toLowerCase() === name.toLowerCase());
     let id;
@@ -1264,7 +1368,7 @@
   // 导入后清理失效的暗箱引用（旧 qid 可能已不存在）+ 重置轮次
   function afterImportReset() {
     rigging.rules = rigging.rules.filter(r => {
-      if (r.type === 'exactQ' || r.type === 'prefixQ') return QB.questions.some(q => q.id === r.qid);
+      if (r.type === 'exactQ' || r.type === 'prefixQ' || r.type === 'avoidQ') return QB.questions.some(q => q.id === r.qid);
       return true;
     });
     rigging.usedExact.clear();
@@ -1387,6 +1491,14 @@
       rigging.rules.push(r); renderRules();
     }
   });
+  // 暗箱·不能抽中：整类或二级「永不抽中」
+  document.getElementById('addAvoid').addEventListener('click', () => {
+    const cat = document.getElementById('avoidCat').value;
+    const r = { type: 'avoid', cat, id: ruleId() };
+    const s = readRigSub(cat, document.getElementById('avoidSub'));
+    if (s) r.sub = s;
+    rigging.rules.push(r); renderRules(); if (wheelMode === 'question') rebuild();
+  });
 
   document.getElementById('rigSearch').addEventListener('input', renderRigResults);
   document.getElementById('addQExact').addEventListener('click', () => {
@@ -1398,6 +1510,11 @@
     if (!rigSelQid) { alert('请先在上方搜索并点选一题'); return; }
     const k = parseInt(document.getElementById('qPrefixK').value, 10);
     if (k > 0) { rigging.rules.push({ type: 'prefixQ', count: k, qid: rigSelQid, id: ruleId() }); renderRules(); if (wheelMode === 'question') rebuild(); }
+  });
+  // 暗箱·不能抽中：指定某题永不抽中
+  document.getElementById('addQAvoid').addEventListener('click', () => {
+    if (!rigSelQid) { alert(t('请先在上方搜索并点选一题')); return; }
+    rigging.rules.push({ type: 'avoidQ', qid: rigSelQid, id: ruleId() }); renderRules(); if (wheelMode === 'question') rebuild();
   });
   document.getElementById('qSampleN').addEventListener('change', e => {
     const v = parseInt(e.target.value, 10);
@@ -1524,9 +1641,14 @@
   const prefixSub = document.getElementById('prefixSub');
   fillRigSub(exactSub, document.getElementById('exactCat').value);
   fillRigSub(prefixSub, document.getElementById('prefixCat').value);
+  // 不能抽中：类别 + 二级下拉
+  fillCatSelect(document.getElementById('avoidCat'));
+  const avoidSub = document.getElementById('avoidSub');
+  fillRigSub(avoidSub, document.getElementById('avoidCat').value);
   // 切换一级类 → 二级选项重置为「整类」并重新生成
   document.getElementById('exactCat').addEventListener('change', e => { fillRigSub(exactSub, e.target.value); });
   document.getElementById('prefixCat').addEventListener('change', e => { fillRigSub(prefixSub, e.target.value); });
+  document.getElementById('avoidCat').addEventListener('change', e => { fillRigSub(avoidSub, e.target.value); });
   renderRules();
   refreshEdCatSelect();
   renderEditor();
