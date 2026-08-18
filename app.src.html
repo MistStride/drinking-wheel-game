@@ -512,10 +512,10 @@
   /*__I18N_EN__*/
   // ===================== 分类元信息 =====================
   const CAT_META = {
-    truth:    { label: '真心话', labelEn: 'Truth', color: '#ffb3c6', weight: 3 },
-    dare:     { label: '大冒险', labelEn: 'Dare', color: '#ffd56b', weight: 3 },
-    drink:    { label: '直接喝', labelEn: 'Drink', color: '#9fd3ff', weight: 2 },
-    deeptalk: { label: 'Deeptalk', labelEn: 'Deeptalk', color: '#c9b6ff', weight: 1 },
+    truth:    { label: '真心话', labelEn: 'Truth',    emoji: '🎤', color: '#ffb3c6', weight: 3 },
+    dare:     { label: '大冒险', labelEn: 'Dare',     emoji: '⚡', color: '#ffd56b', weight: 3 },
+    drink:    { label: '直接喝', labelEn: 'Drink',    emoji: '🍻', color: '#9fd3ff', weight: 2 },
+    deeptalk: { label: 'Deeptalk', labelEn: 'Deeptalk', emoji: '💭', color: '#c9b6ff', weight: 1 },
   };
 
   // ===================== 多语言（中文 / English） =====================
@@ -554,7 +554,11 @@
         if (node.nodeType === 3 && node.nodeValue && node.nodeValue.trim()) {
           if (!_zhMap.has(node)) _zhMap.set(node, node.nodeValue);
           const orig = _zhMap.get(node);
-          const en = (lang === 'en' && I18N_EN[orig] != null) ? I18N_EN[orig] : orig;
+          let en = orig;
+          if (lang === 'en') {
+            if (I18N_EN[orig] != null) en = I18N_EN[orig];
+            else if (I18N_EN[orig.trim()] != null) en = I18N_EN[orig.trim()];
+          }
           if (en !== node.nodeValue) node.nodeValue = en;
         }
       }
@@ -562,7 +566,12 @@
         const v = el.getAttribute(a);
         if (v && /[一-鿿]/.test(v)) {
           if (!_zhMap.has(el.getAttributeNode(a))) _zhMap.set(el.getAttributeNode(a), v);
-          const en = (lang === 'en' && I18N_EN[v] != null) ? I18N_EN[v] : v;
+          const orig = _zhMap.get(el.getAttributeNode(a));
+          let en = orig;
+          if (lang === 'en') {
+            if (I18N_EN[orig] != null) en = I18N_EN[orig];
+            else if (I18N_EN[orig.trim()] != null) en = I18N_EN[orig.trim()];
+          }
           if (en !== v) el.setAttribute(a, en);
         }
       }
@@ -574,7 +583,14 @@
     document.documentElement.lang = (lang === 'en') ? 'en' : 'zh-CN';
     updateLangToggle();
     applyI18n(document);
-    if (pendingResult) showResult(pendingResult);
+    if (pendingResult) {
+      showResult(pendingResult);
+    } else {
+      // 没有待显示的抽题结果时，刷新结果区占位文案
+      const _re = document.getElementById('result');
+      if (_re && _re.classList.contains('placeholder')) _re.textContent = t('点击转盘中央「开始」试试手气 🎯');
+    }
+    // 切换语言时让 renderWheel 重建转盘，让「开始」按钮文字也跟着切
     rebuild();
     renderCatSwitches(); renderTopicChecks();
     refreshEdCatSelect(); renderEditor();
@@ -805,12 +821,12 @@
   function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 
   // 英文在转盘切片里会沿半径竖排，单词被拆成单个字母，很难读。
-  // 英文模式下转盘的切片只显示简短类别名（Truth / Dare / Drink / Deeptalk），
+  // 英文模式下改用表情符号图标（单字形，竖排不拆分）+ 短类别名，
   // 完整题目仍显示在结果区；中文保持显示题目原文。
   function wheelLabel(q, b) {
     if (lang === 'en') {
       const cat = q ? q.cat : (b ? b.cat : '');
-      return catLabel(cat);
+      return (CAT_META[cat] && CAT_META[cat].emoji) || '•';
     }
     if (q) return truncate(qText(q), 12);
     return truncate(b.label, 14);
@@ -818,7 +834,9 @@
 
   function buildPrizes() {
     const empty = [{ background: '#6b7280', fonts: [{ text: t('请开启内容'), top: '40%', fontColor: '#fff', fontSize: '13px', fontWeight: 'bold' }] }];
-    const baseFont = { top: '40%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold' };
+    const enFont = { top: '40%', fontColor: '#5a3a47', fontSize: '22px' };
+    const zhFont = { top: '40%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold' };
+    const baseFont = (lang === 'en') ? enFont : zhFont;
     if (wheelMode === 'question') {
       if (qSegs.length === 0) return empty;
       return qSegs.map((q, i) => ({
@@ -841,19 +859,17 @@
   }
 
   function renderWheel() {
-    if (myLucky) {
-      myLucky.prizes = buildPrizes();
-    } else {
-      myLucky = new LuckyCanvas.LuckyWheel('#wheel', {
-        width: '430px', height: '430px',
-        blocks: [{ padding: '12px', background: '#ffffff' }],
-        prizes: buildPrizes(),
-        buttons: [{ radius: '38%', background: '#ff6b9d', pointer: true,
-          fonts: [{ text: t('开始'), top: '-12px', fontColor: '#fff', fontSize: '16px', fontWeight: 'bold' }] }],
-        start: onSpinStart,
-        end: onSpinEnd
-      });
-    }
+    const _wheelEl = document.getElementById('wheel');
+    if (_wheelEl) _wheelEl.innerHTML = ''; // 清掉旧 canvas，避免切换语言时残留旧按钮/奖品
+    myLucky = new LuckyCanvas.LuckyWheel('#wheel', {
+      width: '430px', height: '430px',
+      blocks: [{ padding: '12px', background: '#ffffff' }],
+      prizes: buildPrizes(),
+      buttons: [{ radius: '38%', background: '#ff6b9d', pointer: true,
+        fonts: [{ text: t('开始'), top: '-12px', fontColor: '#fff', fontSize: '16px', fontWeight: 'bold' }] }],
+      start: onSpinStart,
+      end: onSpinEnd
+    });
   }
 
   // ===================== 抽取逻辑 =====================
@@ -1659,6 +1675,9 @@
   // ===================== 初始化 =====================
   document.getElementById('subtitle').textContent =
     '转盘一转，今晚的玩法交给运气——真心话、大冒险、直接喝，还是 Deeptalk？';
+  // 结果区占位文案（applyI18n 跳过了 #result，所以这里手动用 t() 写入）
+  const _resultEl = document.getElementById('result');
+  if (_resultEl) _resultEl.textContent = t('点击转盘中央「开始」试试手气 🎯');
   renderCatSwitches();
   renderTopicChecks();
   fillCatSelect(document.getElementById('exactCat'));
@@ -1681,6 +1700,8 @@
   // 初始根据默认抽题模式显示「自定义比例」按钮（默认按题目，故显示）
   document.getElementById('btnQuota').style.display = (wheelMode === 'question') ? '' : 'none';
   document.getElementById('qSampleRow').style.display = (wheelMode === 'question') ? '' : 'none';
+  // 若上次保存的是英文（localStorage），首屏就要翻译静态 HTML，否则会残留中文
+  if (lang === 'en') applyI18n(document);
   rebuild();
   </script>
 </body>
