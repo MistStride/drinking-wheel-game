@@ -12,6 +12,14 @@ if (!src.includes('/*__QUESTION_BANK__*/')) {
   console.error('未找到占位符 /*__QUESTION_BANK__*/');
   process.exit(1);
 }
+if (!src.includes('/*__I18N_EN__*/')) {
+  console.error('未找到占位符 /*__I18N_EN__*/');
+  process.exit(1);
+}
+if (!src.includes('/*__GUIDE_MD_EN__*/')) {
+  console.error('未找到占位符 /*__GUIDE_MD_EN__*/');
+  process.exit(1);
+}
 // 防止 JSON 中出现 </script> 截断（理论上纯 JSON 不会，这里做兜底）
 const bankJson = JSON.stringify(QB);
 if (bankJson.includes('</script')) {
@@ -33,7 +41,35 @@ if (guideJson.includes('</script')) {
 }
 const guide = 'window.GUIDE_MD = ' + guideJson + ';\n';
 
-const out = src.replace('/*__QUESTION_BANK__*/', bank).replace('/*__GUIDE_MD__*/', guide);
+// 英文版 UI 文案字典：build 时注入为 window.I18N_EN
+let i18nJson;
+try {
+  i18nJson = JSON.stringify(JSON.parse(fs.readFileSync(path + '/i18n-en.json', 'utf8')));
+} catch (e) {
+  console.error('读取 i18n-en.json 失败：', e.message);
+  process.exit(1);
+}
+if (i18nJson.includes('</script')) {
+  console.error('i18n-en.json 中含 </script，存在注入风险，已中止');
+  process.exit(1);
+}
+const i18nOut = 'window.I18N_EN = ' + i18nJson + ';\n';
+
+// 英文版题库指南：build 时注入为 window.GUIDE_MD_EN
+let enGuideJson = '""';
+if (fs.existsSync(path + '/自定义题库指南-en.md')) {
+  enGuideJson = JSON.stringify(fs.readFileSync(path + '/自定义题库指南-en.md', 'utf8'));
+  if (enGuideJson.includes('</script')) {
+    console.error('英文指南 md 中含 </script，存在注入风险，已中止');
+    process.exit(1);
+  }
+}
+const enGuide = 'window.GUIDE_MD_EN = ' + enGuideJson + ';\n';
+
+const out = src.replace('/*__QUESTION_BANK__*/', bank)
+  .replace('/*__GUIDE_MD__*/', guide)
+  .replace('/*__GUIDE_MD_EN__*/', enGuide)
+  .replace('/*__I18N_EN__*/', i18nOut);
 fs.writeFileSync(path + '/app.html', out);
 // GitHub Pages 访问根网址时默认打开 index.html，故同步写一份，保证线上 = 最新 app
 fs.writeFileSync(path + '/index.html', out);

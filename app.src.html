@@ -54,6 +54,13 @@
   }
   header h1:hover { transform: rotate(-2deg) scale(1.04); }
   header p { margin: 10px auto 0; max-width: 640px; color: var(--muted); font-size: 13px; }
+  .lang-toggle {
+    position: fixed; top: 18px; right: 22px; z-index: 60;
+    padding: 8px 16px; border-radius: 999px; font-weight: 800; font-size: 13px;
+    background: linear-gradient(135deg, var(--lav), var(--pink-deep)); color: #fff;
+    border: 2px solid #fff; box-shadow: 0 6px 16px rgba(201,182,255,.5);
+  }
+  .lang-toggle:hover { transform: translateY(-2px) scale(1.05); }
   .layout { display: flex; gap: 26px; padding: 22px 32px 52px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
   .stage {
     position: relative; background: var(--card); border: 2px solid var(--line);
@@ -410,6 +417,7 @@
   <header>
     <h1>🍻 来一口大转盘</h1>
     <p id="subtitle">转盘一转，今晚的玩法交给运气——真心话、大冒险、直接喝，还是 Deeptalk？</p>
+    <button id="langToggle" class="lang-toggle">EN</button>
   </header>
 
   <div class="layout">
@@ -500,6 +508,8 @@
   <script>
   /*__QUESTION_BANK__*/
   /*__GUIDE_MD__*/
+  /*__GUIDE_MD_EN__*/
+  /*__I18N_EN__*/
   // ===================== 分类元信息 =====================
   const CAT_META = {
     truth:    { label: '真心话', labelEn: 'Truth', color: '#ffb3c6', weight: 3 },
@@ -510,7 +520,7 @@
 
   // ===================== 多语言（中文 / English） =====================
   // 英文文案字典：键为原文（中文），值为英文。build.js 注入。缺失键则保留中文。
-  const I18N_EN = /*__I18N_EN__*/{}/*__I18N_EN__*/;
+  const I18N_EN = window.I18N_EN;
   let lang = (function () { try { return localStorage.getItem('lang') || 'zh'; } catch (e) { return 'zh'; } })();
   function t(s) { if (!s) return s; return (lang === 'en' && I18N_EN[s] != null) ? I18N_EN[s] : s; }
   // 数据维度：随 lang 返回中文/英文
@@ -537,6 +547,7 @@
     const els = [root]; let n = walker.nextNode();
     while (n) { els.push(n); n = walker.nextNode(); }
     for (const el of els) {
+      if (!el || el.nodeType !== 1) continue;
       if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
       if (el.closest && el.closest(_I18N_SKIP)) continue;
       for (const node of Array.from(el.childNodes)) {
@@ -1287,12 +1298,13 @@
 
   // 自定义题库指南：内置 md，点一下直接下载，无需跳仓库
   function doExportGuide() {
-    const md = window.GUIDE_MD;
+    const isEn = (lang === 'en');
+    const md = isEn ? (window.GUIDE_MD_EN || window.GUIDE_MD) : window.GUIDE_MD;
     if (!md) { alert('指南内容未加载，请刷新页面后重试'); return; }
     const blob = new Blob(['\ufeff' + md], { type: 'text/markdown;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = '自定义题库指南.md';
+    a.download = isEn ? 'custom-question-bank-guide.md' : '自定义题库指南.md';
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -1529,6 +1541,7 @@
   document.getElementById('guideClose').addEventListener('click', () => guideOverlay.classList.remove('show'));
   guideOverlay.addEventListener('click', e => { if (e.target === guideOverlay) guideOverlay.classList.remove('show'); });
   document.getElementById('guideDownload').addEventListener('click', doExportGuide);
+  document.getElementById('langToggle').addEventListener('click', () => setLang(lang === 'en' ? 'zh' : 'en'));
   document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) doImport(e.target.files[0]); e.target.value = ''; });
   document.getElementById('btnImportCsv').addEventListener('click', () => document.getElementById('fileInputCsv').click());
   document.getElementById('fileInputCsv').addEventListener('change', e => { if (e.target.files[0]) doImportCsv(e.target.files[0]); e.target.value = ''; });
