@@ -820,21 +820,18 @@
 
   function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 
-  // 英文在转盘切片里会沿半径竖排，单词被拆成单个字母，很难读。
-  // 英文模式下改用表情符号图标（单字形，竖排不拆分）+ 短类别名，
-  // 完整题目仍显示在结果区；中文保持显示题目原文。
+  // 转盘切片文字：中文版保持原样（显示题目/分支标签，自动换行）。
+  // 英文版：lucky-canvas 默认在字符处换行会把单词拆碎（wh/at/ar/e），
+  // 因此关闭自动换行（wordWrap:false），让完整句子沿半径从外圈往圆心连续排成一条线。
   function wheelLabel(q, b) {
-    if (lang === 'en') {
-      const cat = q ? q.cat : (b ? b.cat : '');
-      return (CAT_META[cat] && CAT_META[cat].emoji) || '•';
-    }
-    if (q) return truncate(qText(q), 12);
-    return truncate(b.label, 14);
+    if (q) return truncate(qText(q), lang === 'en' ? 16 : 12);
+    return truncate(b.label, lang === 'en' ? 18 : 14);
   }
 
   function buildPrizes() {
     const empty = [{ background: '#6b7280', fonts: [{ text: t('请开启内容'), top: '40%', fontColor: '#fff', fontSize: '13px', fontWeight: 'bold' }] }];
-    const enFont = { top: '40%', fontColor: '#5a3a47', fontSize: '22px' };
+    // 英文：wordWrap:false 保持单词连续，lineClamp 不截行
+    const enFont = { top: '38%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold', wordWrap: false, lineClamp: 1 };
     const zhFont = { top: '40%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold' };
     const baseFont = (lang === 'en') ? enFont : zhFont;
     if (wheelMode === 'question') {
