@@ -55,7 +55,7 @@
   header h1:hover { transform: rotate(-2deg) scale(1.04); }
   header p { margin: 10px auto 0; max-width: 640px; color: var(--muted); font-size: 13px; }
   .lang-toggle {
-    position: fixed; top: 18px; right: 22px; z-index: 60;
+    position: fixed; top: 16px; right: 78px; z-index: 60;
     padding: 8px 16px; border-radius: 999px; font-weight: 800; font-size: 13px;
     background: linear-gradient(135deg, var(--lav), var(--pink-deep)); color: #fff;
     border: 2px solid #fff; box-shadow: 0 6px 16px rgba(201,182,255,.5);
@@ -1007,12 +1007,12 @@
   function showResult(q) {
     const box = document.getElementById('result');
     box.classList.remove('placeholder');
-    const catLabel = catLabelOf(q.cat);
+    const catName = catLabel(q.cat);
     const topicLabel = (q.topic && (QB.topics[q.cat] || []).find(tt => tt.id === q.topic)) ? (topicLabelOf(QB.topics[q.cat].find(tt => tt.id === q.topic)) + ' · ') : '';
     let extra = '';
     if (q.cat === 'dare') extra = t(' · 接触') + q.contact + (q.stranger ? t(' · 陌生人') : '');
     if (q.cat === 'drink') extra = ' · ' + (q.combo ? t('含附加题') : (q.who !== 'self' ? t('指定他人') : t('自喝')));
-    box.innerHTML = '<span class="pill" style="background:' + CAT_META[q.cat].color + '">' + catLabel + '</span> ' +
+    box.innerHTML = '<span class="pill" style="background:' + CAT_META[q.cat].color + '">' + catName + '</span> ' +
       '<span class="pill-risk" style="background:var(--tint);color:var(--muted);border:1px solid var(--line)">' + topicLabel + (q.risk || 'safe') + extra + '</span><br>' + qText(q);
   }
 
