@@ -808,19 +808,32 @@
 
   function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 
+  // 英文在转盘切片里会沿半径竖排，单词被拆成单个字母，很难读。
+  // 英文模式下转盘的切片只显示简短类别名（Truth / Dare / Drink / Deeptalk），
+  // 完整题目仍显示在结果区；中文保持显示题目原文。
+  function wheelLabel(q, b) {
+    if (lang === 'en') {
+      const cat = q ? q.cat : (b ? b.cat : '');
+      return catLabel(cat);
+    }
+    if (q) return truncate(qText(q), 12);
+    return truncate(b.label, 14);
+  }
+
   function buildPrizes() {
     const empty = [{ background: '#6b7280', fonts: [{ text: t('请开启内容'), top: '40%', fontColor: '#fff', fontSize: '13px', fontWeight: 'bold' }] }];
+    const baseFont = { top: '40%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold' };
     if (wheelMode === 'question') {
       if (qSegs.length === 0) return empty;
       return qSegs.map((q, i) => ({
         background: i % 2 === 0 ? CAT_META[q.cat].color : shade(CAT_META[q.cat].color, -18),
-        fonts: [{ text: truncate(qText(q), 12), top: '40%', fontColor: '#5a3a47', fontSize: '11px', fontWeight: 'bold' }]
+        fonts: [{ text: wheelLabel(q, null), ...baseFont }]
       }));
     }
     if (branches.length === 0) return empty;
     return branches.map((b, i) => ({
       background: i % 2 === 0 ? CAT_META[b.cat].color : shade(CAT_META[b.cat].color, -18),
-      fonts: [{ text: truncate(b.label, 14), top: '40%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold' }]
+      fonts: [{ text: wheelLabel(null, b), ...baseFont }]
     }));
   }
 
