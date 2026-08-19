@@ -72,17 +72,7 @@
     background: radial-gradient(circle, rgba(255,158,196,.45), transparent 62%);
     filter: blur(26px);
   }
-  #wheel { width: 430px; height: 430px; position: relative; }
-  #wheelLabels {
-    position: absolute; top: 0; left: 0; width: 430px; height: 430px;
-    pointer-events: none; z-index: 5; overflow: hidden;
-  }
-  .wheel-label {
-    position: absolute; transform: translate(-50%, -50%);
-    font-size: 9px; font-weight: 800; color: #5a3a47;
-    white-space: nowrap; letter-spacing: 0.3px;
-    text-shadow: 0 1px 2px rgba(255,255,255,.9);
-  }
+  #wheel { width: 430px; height: 430px; }
   .result {
     width: 100%; min-height: 86px; border-radius: 18px; padding: 14px 16px;
     background: var(--tint); border: 2px solid var(--line); font-size: 15px; line-height: 1.6;
@@ -434,7 +424,6 @@
     <!-- 左：转盘 + 结果 -->
     <div class="stage">
       <div id="wheel"></div>
-      <div id="wheelLabels"></div>
       <div class="round-info">
         <span>当前轮次：<b id="roundNum">0</b></span>
         <button class="ghost sm" id="resetRound">重置轮次</button>
@@ -832,31 +821,29 @@
   function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 
   // 中文版：lucky-canvas 自带文字沿弧线排，中文竖排可读，保持原样。
-  // 英文版：lucky-canvas 文字沿弧线会把相邻切片连成一片（完全无法阅读），
-  //   改为隐藏 lucky-canvas 文字，用 HTML 标签层叠加显示类别名。
+  // 英文版：设 rotateDeg:90 让文字沿半径方向排布（从外圈往圆心），完整句子可见，跟切片一起转。
   function wheelLabel(q, b) {
-    if (q) return truncate(qText(q), 12);
-    return truncate(b.label, 14);
-  }
-  function wheelEnLabel(q, b) {
-    const cat = q ? q.cat : (b ? b.cat : '');
-    return catLabel(cat);
+    if (q) return truncate(qText(q), lang === 'en' ? 24 : 12);
+    return truncate(b.label, lang === 'en' ? 24 : 14);
   }
 
   function buildPrizes() {
     const empty = [{ background: '#6b7280', fonts: [{ text: t('请开启内容'), top: '40%', fontColor: '#fff', fontSize: '13px', fontWeight: 'bold' }] }];
     const zhFont = { top: '40%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold' };
+    // 英文：rotateDeg:90 让文字沿半径方向从外圈往圆心排布（默认 0 是沿弧线切线方向，会与相邻切片文字重叠）
+    const enFont = { top: '38%', fontColor: '#5a3a47', fontSize: '11px', fontWeight: 'bold', wordWrap: false, lineClamp: 1, rotateDeg: 90 };
+    const baseFont = (lang === 'en') ? enFont : zhFont;
     if (wheelMode === 'question') {
       if (qSegs.length === 0) return empty;
       return qSegs.map((q, i) => ({
         background: i % 2 === 0 ? CAT_META[q.cat].color : shade(CAT_META[q.cat].color, -18),
-        fonts: (lang === 'en') ? [] : [{ text: wheelLabel(q, null), ...zhFont }]
+        fonts: [{ text: wheelLabel(q, null), ...baseFont }]
       }));
     }
     if (branches.length === 0) return empty;
     return branches.map((b, i) => ({
       background: i % 2 === 0 ? CAT_META[b.cat].color : shade(CAT_META[b.cat].color, -18),
-      fonts: (lang === 'en') ? [] : [{ text: wheelLabel(null, b), ...zhFont }]
+      fonts: [{ text: wheelLabel(null, b), ...baseFont }]
     }));
   }
 
@@ -879,32 +866,6 @@
       start: onSpinStart,
       end: onSpinEnd
     });
-    renderWheelLabels();
-  }
-
-  // 英文版：在转盘 canvas 上叠加 HTML 标签层，每片放一个正向的短标签（永远横排、不随转盘角度旋转）
-  function renderWheelLabels() {
-    const labelsEl = document.getElementById('wheelLabels');
-    if (!labelsEl) return;
-    labelsEl.innerHTML = '';
-    if (lang !== 'en') return; // 中文保持 lucky-canvas 自带文字，不叠加
-    const segCount = (wheelMode === 'question') ? qSegs.length : branches.length;
-    if (segCount === 0) return;
-    const cx = 215, cy = 215, r = 148; // 标签距圆心的半径
-    for (let i = 0; i < segCount; i++) {
-      const q = (wheelMode === 'question') ? qSegs[i] : null;
-      const b = (wheelMode === 'branch') ? branches[i] : null;
-      if (!q && !b) continue;
-      const angle = (i / segCount) * 2 * Math.PI - Math.PI / 2; // 从正上方开始
-      const x = cx + r * Math.sin(angle);
-      const y = cy - r * Math.cos(angle);
-      const div = document.createElement('div');
-      div.className = 'wheel-label';
-      div.style.left = x + 'px';
-      div.style.top = y + 'px';
-      div.textContent = wheelEnLabel(q, b);
-      labelsEl.appendChild(div);
-    }
   }
 
   // ===================== 抽取逻辑 =====================
