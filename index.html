@@ -825,29 +825,26 @@
   function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + '…' : s; }
 
   // 中文版：lucky-canvas 自带文字沿弧线排，中文竖排可读，保持原样。
-  // 英文版：设 rotateDeg:90 让文字沿半径方向排布（从外圈往圆心），完整句子可见，跟切片一起转。
+  // 英文版：与中文一致，显示题目/分支标签原文（截断），恢复最初版本行为。
   function wheelLabel(q, b) {
-    if (q) return truncate(qText(q), lang === 'en' ? 24 : 12);
-    return truncate(b.label, lang === 'en' ? 24 : 14);
+    if (q) return truncate(qText(q), 12);
+    return truncate(b.label, 14);
   }
 
   function buildPrizes() {
     const empty = [{ background: '#6b7280', fonts: [{ text: t('请开启内容'), top: '40%', fontColor: '#fff', fontSize: '13px', fontWeight: 'bold' }] }];
     const zhFont = { top: '40%', fontColor: '#5a3a47', fontSize: '12px', fontWeight: 'bold' };
-    // 英文：rotateDeg:90 让文字沿半径方向从外圈往圆心排布（默认 0 是沿弧线切线方向，会与相邻切片文字重叠）
-    const enFont = { top: '38%', fontColor: '#5a3a47', fontSize: '11px', fontWeight: 'bold', wordWrap: false, lineClamp: 1, rotateDeg: 90 };
-    const baseFont = (lang === 'en') ? enFont : zhFont;
     if (wheelMode === 'question') {
       if (qSegs.length === 0) return empty;
       return qSegs.map((q, i) => ({
         background: i % 2 === 0 ? CAT_META[q.cat].color : shade(CAT_META[q.cat].color, -18),
-        fonts: [{ text: wheelLabel(q, null), ...baseFont }]
+        fonts: [{ text: wheelLabel(q, null), ...zhFont }]
       }));
     }
     if (branches.length === 0) return empty;
     return branches.map((b, i) => ({
       background: i % 2 === 0 ? CAT_META[b.cat].color : shade(CAT_META[b.cat].color, -18),
-      fonts: [{ text: wheelLabel(null, b), ...baseFont }]
+      fonts: [{ text: wheelLabel(null, b), ...zhFont }]
     }));
   }
 
